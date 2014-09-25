@@ -19,9 +19,11 @@ classdef Cell < handle
     methods
         function obj = Cell(id, ul, dl)
             % constructor for setting initial variables
-            obj.cellId = id;
-            obj.uplink = ul;
-            obj.downlink = dl;
+            if (nargin == 3) 
+                obj.cellId = id;
+                obj.uplink = ul;
+                obj.downlink = dl;
+            end
             % obj.uQueue = obj.uQueue + uData;
             % obj.dQueue = obj.dQueue + dData;
         end
@@ -58,7 +60,7 @@ classdef Cell < handle
         
         function receive(obj, packets)
             % receive removes packets from down queue
-            if (packet <= 0)
+            if (packets <= 0)
                 return
             end
             

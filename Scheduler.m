@@ -45,8 +45,10 @@ classdef Scheduler < handle
             downlinks = zeros(1, length(cells));
             idx = 1;
             for cell = cells
-                uplinks(idx) = cell.uplink;
-                downlinks(idx) = cell.downlink;
+                %uplinks(idx) = cell.uplink;
+                %downlinks(idx) = cell.downlink;
+                uplinks(idx) = cell.uQueue;
+                downlinks(idx) = cell.dQueue;
                 idx = idx + 1;
             end
         end
