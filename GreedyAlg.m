@@ -9,6 +9,11 @@ classdef GreedyAlg < SchedulingAlgorithm
         end
         
         function results = computeSubframeProfits(links, profits) 
+            %computeSubframeProfits returns an sorted array of tuples
+            %  each tuple contains the profit and number of subframes with
+            %  that amount of profit
+            %  See our algorithm for details (set A and B)
+            
             m = length(links);
             [links, sortedIndex] = sort(links, 2, 'descend');
             profits = profits(sortedIndex);
@@ -41,6 +46,9 @@ classdef GreedyAlg < SchedulingAlgorithm
         end
         
         function [ul, dl, p] = merge(U, D, m) 
+            %merge merges array A and B and compute the optimal number of 
+            %  uplinks and downlinks
+            
             ul = 0; dl = 0; p = 0;
             i = 1; j = 1;
             while (i <= size(U, 1) && j <= size(D, 1))
