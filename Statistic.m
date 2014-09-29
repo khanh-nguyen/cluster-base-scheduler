@@ -16,7 +16,7 @@ classdef Statistic < handle
         function obj = Statistic(m) 
             %constructor initializes StatsMatrix
             %  FIXME: we might not need N at all
-            obj.StatsMatrix = zeros(m, 10);
+            obj.StatsMatrix = zeros(m, 11);
         end
         
         function update(obj,idx,cells) 
@@ -25,12 +25,13 @@ classdef Statistic < handle
             obj.StatsMatrix(idx,1) = sum(totalThroughputs);
             
             avgThroughputs = cells.getAvgThrouhgput();
-            obj.StatsMatrix(idx,2) = sum(avgThroughputs);
+            %obj.StatsMatrix(idx,2) = sum(avgThroughputs);
+            obj.StatsMatrix(idx,2:3) = mean(avgThroughputs,1);
             
             [minU, maxU, avgU, stdU] = cells.queueStats(Direction.Uplink);
             [minD, maxD, avgD, stdD] = cells.queueStats(Direction.Downlink);
-            obj.StatsMatrix(idx,3:6) = [minU, maxU, avgU, stdU];
-            obj.StatsMatrix(idx,7:10) = [minD, maxD, avgD, stdD];
+            obj.StatsMatrix(idx,4:7) = [minU, maxU, avgU, stdU];
+            obj.StatsMatrix(idx,8:11) = [minD, maxD, avgD, stdD];
         end
     end
 end

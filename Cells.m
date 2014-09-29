@@ -76,6 +76,7 @@ classdef Cells < handle
         end
         
         function avgThroughput = getAvgThrouhgput(obj)
+            %getAvgThrouhgput returns average [uT,dT] until this moment
             if (obj.counter == 0) 
                % first time, no throughput yet
                avgThroughput = [obj.CellMatrix(:,1),obj.CellMatrix(:,1)] ...
@@ -93,9 +94,9 @@ classdef Cells < handle
             %queueStats computes statistics for queue lengths
             switch direction
                 case Direction.Uplink
-                    [minL, maxL, avgL, stdL] = queueStatsHelper(obj.CellMatrix(:,4));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,4));
                 case Direction.Downlink
-                    [minL, maxL, avgL, stdL] = queueStatsHelper(obj.CellMatrix(:,5));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,5));
             end
         end
     end

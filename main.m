@@ -11,7 +11,7 @@ tau = 10;           % length of one time frame (10ms)
 scheduler = Scheduler(M);   % scheduler needs to know the number of cells
 alg1 = GreedyAlg;           % setting scheduling algorithm
 scheduler.setSchedulingAlg(alg1);
-scheduler.setUtilityFunction(@UtilityFunctions.linearQueueLength);
+scheduler.setUtilityFunction(@UtilityFunctions.expQueueLength);
 
 % stat
 stat = Statistic(sim_time/tau);

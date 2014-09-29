@@ -9,12 +9,12 @@ classdef UtilityFunctions
             profits = cells.CellMatrix(:,4:5) ./ avgThroughput;
         end
         
-        function profits = expQueueLength(cell)
+        function profits = expQueueLength(cells)
             %expQueueLength utility proportional to the exponential of 
             %  queue length
             
             avgThroughput = cells.getAvgThrouhgput();
-            profits = exp(cell.CellMatrix(:,4:5)) ./ avgThroughput;
+            profits = exp(cells.CellMatrix(:,4:5)) ./ avgThroughput;
         end
     end
 end
