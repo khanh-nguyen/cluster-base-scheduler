@@ -2,14 +2,14 @@ classdef Scheduler < handle
     %This is a cluster-base scheduler
     %  Given a list of cells in a cluster, find the optimal configuration
     
-    %% Class properties
+    %%Class properties
     properties
         utilityFunc;
         schedulingAlg;
         M;              % number of subframes in each frame
     end
     
-    %% Instance methods
+    %%Instance methods
     methods 
         function obj = Scheduler(M) 
             %constructor sets the number of subframes
@@ -41,7 +41,7 @@ classdef Scheduler < handle
         end
     end
     
-    %% Static methods
+    %%Static methods
     methods (Static)
         function [uProfits, dProfits] = computeSubframeProfits(cells, utilityFunc) 
             profits = utilityFunc(cells);
@@ -56,4 +56,6 @@ classdef Scheduler < handle
             b = true;
         end
     end
+    
+    
 end

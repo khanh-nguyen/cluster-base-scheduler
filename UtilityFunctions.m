@@ -6,7 +6,7 @@ classdef UtilityFunctions
             %linearQueueLength utility proportional to queue length
             
             avgThroughput = cells.getAvgThrouhgput();
-            profits = cells.CellMatrix(:,4:5) ./ avgThroughput;
+            profits = cells.CellMatrix(:,4:5) ./ avgThroughput;    %FIXME: try to use Cell's API
         end
         
         function profits = expQueueLength(cells)
@@ -14,19 +14,19 @@ classdef UtilityFunctions
             %  queue length
             
             avgThroughput = cells.getAvgThrouhgput();
-            profits = exp(cells.CellMatrix(:,4:5)) ./ avgThroughput;
+            profits = exp(cells.CellMatrix(:,4:5)) ./ avgThroughput; %FIXME: try to use Cells' API
         end
         
         function profits = dataRateBase(cells)
             %dataRateBase returns cells' data rates, including UL and DL
             
-            profits = cells.dataRate();
+            profits = cells.getDataRate();
         end
         
         function profits = dataRateAndQueueBase(cells)
             %dataRateAndQueueBase defines profit as function of data rates
             %  and queue length
-            profits = cells.dataRate() .* cell.queueLength();
+            profits = cells.getDataRate() .* cells.getQueueLength();
         end
     end
 end

@@ -11,7 +11,7 @@ tau = 10;           % length of one time frame (10ms)
 scheduler = Scheduler(M);   % scheduler needs to know the number of cells
 alg1 = GreedyAlg;           % setting scheduling algorithm
 scheduler.setSchedulingAlg(alg1);
-scheduler.setUtilityFunction(@UtilityFunctions.expQueueLength);
+scheduler.setUtilityFunction(@UtilityFunctions.dataRateAndQueueBase);
 
 % stat
 stat = Statistic(sim_time/tau);
@@ -31,9 +31,8 @@ for s=1:nsims
     while (timer < sim_time)
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        ulinks = DataGenerator.generateUplinkDemand(N);
-        dlinks = M - ulinks;
-        cells.setDemand(ulinks,dlinks);
+        link_demand = DataGenerator.generateLinkDemand(N,M);
+        cells.setDemand(link_demand);
                 
         % 2. If not yet configured, configure the cluster 
         if Scheduler.needReconfiguration() 
