@@ -11,8 +11,10 @@ tau = 10;           % length of one time frame (10ms)
 scheduler = Scheduler(M);   % scheduler needs to know the number of cells
 alg1 = GreedyAlg;           % setting scheduling algorithm
 scheduler.setSchedulingAlg(alg1);
-
 scheduler.setUtilityFunction(@UtilityFunctions.queueLengthBaseFunc);
+
+% stat
+stat = Statistic(N, sim_time/tau);
 
 for s=1:nsims
     timer = 0;
@@ -28,7 +30,7 @@ for s=1:nsims
     while (timer < sim_time)
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        ulinks = randi([1,M], 1, N);
+        ulinks = DataGenerator.generateUplinkDemand(N);
         dlinks = M - ulinks;
         cells.setDemand(ulinks,dlinks);
                 
@@ -41,7 +43,7 @@ for s=1:nsims
         cells.transmit(mu, md);
         
         % 4. Compute the number of missing packets, queue length, etc.
-        Statistic.getStatistics(cells);
+        stat.update(cells);
         
         % 5. Increase timer
         timer = timer + tau;
