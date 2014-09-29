@@ -16,5 +16,17 @@ classdef UtilityFunctions
             avgThroughput = cells.getAvgThrouhgput();
             profits = exp(cells.CellMatrix(:,4:5)) ./ avgThroughput;
         end
+        
+        function profits = dataRateBase(cells)
+            %dataRateBase returns cells' data rates, including UL and DL
+            
+            profits = cells.dataRate();
+        end
+        
+        function profits = dataRateAndQueueBase(cells)
+            %dataRateAndQueueBase defines profit as function of data rates
+            %  and queue length
+            profits = cells.dataRate() .* cell.queueLength();
+        end
     end
 end
