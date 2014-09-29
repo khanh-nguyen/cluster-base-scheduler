@@ -1,7 +1,7 @@
 clear; clc;
 
 % simulation parameters
-nsims = 100;        
+nsims = 1; %100;        
 sim_time = 1000;    % sim_time / tau = number of frames
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
@@ -11,8 +11,10 @@ tau = 10;           % length of one time frame (10ms)
 scheduler = Scheduler(M);   % scheduler needs to know the number of cells
 alg1 = GreedyAlg;           % setting scheduling algorithm
 scheduler.setSchedulingAlg(alg1);
+scheduler.setUtilityFunction(@UtilityFunctions.linearQueueLength);
 
-scheduler.setUtilityFunction(@UtilityFunctions.queueLengthBaseFunc);
+% stat
+stat = Statistic(sim_time/tau);
 
 for s=1:nsims
     timer = 0;
@@ -25,10 +27,11 @@ for s=1:nsims
     dataRate = DataGenerator.generateDataRate(N);
     cells.setDataRate(dataRate);
     
+    idx = 1;
     while (timer < sim_time)
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        ulinks = randi([1,M], 1, N);
+        ulinks = DataGenerator.generateUplinkDemand(N);
         dlinks = M - ulinks;
         cells.setDemand(ulinks,dlinks);
                 
@@ -41,7 +44,8 @@ for s=1:nsims
         cells.transmit(mu, md);
         
         % 4. Compute the number of missing packets, queue length, etc.
-        Statistic.getStatistics(cells);
+        stat.update(idx,cells);
+        idx = idx + 1;
         
         % 5. Increase timer
         timer = timer + tau;

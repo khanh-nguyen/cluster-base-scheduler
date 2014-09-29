@@ -2,10 +2,11 @@ classdef Cells < handle
     %Cells represents the set of cells in one cluster
     
     properties
-        CellMatrix; %  -------------------------------------------------
-                    % | Data rate | UL | DL | DL queue | UL queue |
+        CellMatrix; %  -------------------------------------------
+                    % | Data rate | UL | DL | UL queue | DL queue |
                     
         M;          % number of subframes in a frame
+        N;          % number of cells
         Throughput; % Nx2 matrix - cummulative throughput
         counter = 0; % number of time frames since existence 
     end
@@ -14,9 +15,10 @@ classdef Cells < handle
         function obj = Cells(N, M)
             %constructor creates a set of N cells
             
-            obj.CellMatrix = zeros(N,3);
+            obj.CellMatrix = zeros(N,5);
             obj.M = M;
             obj.Throughput = zeros(N,2);
+            obj.N = N;
         end
         
         function setDataRate(obj, rates) 
@@ -24,7 +26,7 @@ classdef Cells < handle
             %  rates - a vector represent the rates of cells
             
             classes = {'numeric'};
-            attributes = {'size',[N,1]};
+            attributes = {'size',[obj.N,1]};
             validateattributes(rates,classes,attributes);
             
             obj.CellMatrix(:,1) = rates;
@@ -37,7 +39,7 @@ classdef Cells < handle
             %  downlinks - column vector rep. number of downlink demanded
             
             classes = {'numeric'};
-            attributes = {'size',[N,1]};
+            attributes = {'size',[obj.N,1]};
             validateattributes(uplinks,classes,attributes);
             validateattributes(downlinks,classes,attributes);
             
@@ -82,7 +84,29 @@ classdef Cells < handle
                 avgThroughput = obj.Throughput / obj.counter;
             end
         end
+        
+        function totalThrouhghput = getTotalThroughput(obj)
+            totalThrouhghput = sum(obj.Throughput,1);
+        end
+        
+        function [minL, maxL, avgL, stdL] = queueStats(obj, direction) 
+            %queueStats computes statistics for queue lengths
+            switch direction
+                case Direction.Uplink
+                    [minL, maxL, avgL, stdL] = queueStatsHelper(obj.CellMatrix(:,4));
+                case Direction.Downlink
+                    [minL, maxL, avgL, stdL] = queueStatsHelper(obj.CellMatrix(:,5));
+            end
+        end
     end
     
+    methods (Static)
+        function [minL, maxL, avgL, stdL] = queueStatsHelper(col) 
+                minL = min(col);
+                maxL = max(col);
+                avgL = mean(col);
+                stdL = std(col);
+        end
+    end
 end
 
