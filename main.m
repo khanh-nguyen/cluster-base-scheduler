@@ -7,14 +7,21 @@ M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
 
-% Create a scheduler
-scheduler = Scheduler(M);   % scheduler needs to know the number of cells
-alg1 = GreedyAlg;           % setting scheduling algorithm
-scheduler.setSchedulingAlg(alg1);
-scheduler.setUtilityFunction(@UtilityFunctions.dataRateAndQueueBase);
+alg = GreedyAlg;           % setting scheduling algorithm
+
+% The optimal scheduler
+s1 = SingleFrameScheduler(M);   % scheduler needs to know the number of cells
+s1.setSchedulingAlg(alg);
+s1.setUtilityFunction(@UtilityFunctions.dataRateBase);
+
+% Scheduler that considers queue length
+s2 = SingleFrameScheduler(M);
+s2.setSchedulingAlg(alg);
+s2.setUtilityFunction(@UtilityFunctions.dataRateAndQueueBase);
 
 % stat
-stat = Statistic(sim_time/tau);
+stat = Statistic(nsims, sim_time/tau);
+stat2 = Statistic(nsims, sim_time/tau);
 
 for s=1:nsims
     timer = 0;
@@ -27,27 +34,35 @@ for s=1:nsims
     dataRate = DataGenerator.generateDataRate(N);
     cells.setDataRate(dataRate);
     
+    cells2 = copy(cells);
+    
     idx = 1;
     while (timer < sim_time)
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
         link_demand = DataGenerator.generateLinkDemand(N,M);
         cells.setDemand(link_demand);
-                
+        cells2.setDemand(link_demand);
+        
         % 2. If not yet configured, configure the cluster 
-        if Scheduler.needReconfiguration() 
-            [mu, md] = scheduler.configure(cells);
+        if s1.needReconfiguration() 
+            [mu, md] = s1.configure(cells);
+        end
+        
+        if s2.needReconfiguration()
+            [mu2, md2] = s2.configure(cells);
         end
         
         % 3. All cells transmit and receive as configured
         cells.transmit(mu, md);
+        cells2.transmit(mu2, md2);
         
-        % 4. Compute the number of missing packets, queue length, etc.
-        stat.update(idx,cells);
+        % 4. Update statistics
+        stat.update(s, idx, cells);
+        stat2.update(s, idx, cells2);
         idx = idx + 1;
         
         % 5. Increase timer
         timer = timer + tau;
     end
-end    
-
+end

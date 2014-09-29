@@ -11,10 +11,10 @@ classdef Scheduler < handle
     
     %%Instance methods
     methods 
-        function obj = Scheduler(M) 
-            %constructor sets the number of subframes
-            obj.M = M;
-        end
+%         function obj = Scheduler(M) 
+%             %constructor sets the number of subframes
+%             obj.M = M;
+%         end
         
         function setUtilityFunction(obj, utilityFunc)
             %setUtilityFunction sets utility function
@@ -49,13 +49,15 @@ classdef Scheduler < handle
             dProfits = profits(:,2);
         end
         
-        function b = needReconfiguration()
-            %needReconfiguration returns true if cluster needs to be
-            %  reconfigured, false otherwise.
-            %  For simplicity, we reconfigure for every frame
-            b = true;
-        end
+%         function b = needReconfiguration()
+%             %needReconfiguration returns true if cluster needs to be
+%             %  reconfigured, false otherwise.
+%             %  For simplicity, we reconfigure for every frame
+%             b = true;
+%         end
     end
     
-    
+    methods (Abstract)
+        needReconfiguration(cells)
+    end
 end

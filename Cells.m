@@ -1,4 +1,4 @@
-classdef Cells < handle
+classdef Cells < matlab.mixin.Copyable
     %Cells represents the set of cells in one cluster
     
     properties
@@ -91,7 +91,7 @@ classdef Cells < handle
         function queueLength = getQueueLength(obj)
             %getQueueLength returns Nx2 matrix of queue lengths
             
-            queueLength = obj.CellMatrix(obj.ULQL,obj.DLQL);
+            queueLength = obj.CellMatrix(:,obj.ULQL:obj.DLQL);
         end
         
         %%Utility functions
