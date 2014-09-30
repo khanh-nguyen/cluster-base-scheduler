@@ -67,7 +67,7 @@ classdef Cells < matlab.mixin.Copyable
             dataRates = obj.CellMatrix(:,obj.ULDR:obj.DLDR);
         end
         
-        function avgThroughput = getAvgThrouhgput(obj)
+        function avgThroughput = getAvgThroughput(obj)
             %getAvgThrouhgput returns average [uT,dT] until this moment
             %  FIXME: as we don't need avgThrouhgput for utility funciton,
             %  this function can be rewriten in more efficient way, 
@@ -75,15 +75,16 @@ classdef Cells < matlab.mixin.Copyable
             
             if (obj.counter == 0) 
                % first time, no throughput yet
-               avgThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
-                            .* ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M );
+               %avgThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
+               %             .* ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M );
+               avgThroughput = repmat([0 0], obj.N, 1);
             else     
-                avgThroughput = obj.Throughput / obj.counter;
+               avgThroughput = obj.Throughput / obj.counter;
             end
         end
         
         function totalThrouhghput = getTotalThroughput(obj)
-            %getTotalThroughput returns Nx2 matrix of total throughput
+            %getTotalThroughput returns 1x2 matrix of total throughput
             
             totalThrouhghput = sum(obj.Throughput,1);
         end
@@ -95,21 +96,27 @@ classdef Cells < matlab.mixin.Copyable
         end
         
         %%Utility functions
-        function [uT, dT] = transmit(obj, uplink, downlink)
+        function actual = transmit(obj, uplink, downlink)
             %transmit sends data upward and downward
             %  uplink and downlink are calculated by scheduling algorithm
             %  all cells are configured with the same number of UL and DL
+            %  actual is a 1x2 vector
             
-            uT = (uplink/obj.M) * obj.CellMatrix(:,obj.ULDR);
-            dT = (downlink/obj.M) * obj.CellMatrix(:,obj.DLDR);
+            actual = (repmat([uplink downlink],obj.N,1) ...
+                    .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
+            actual = min(obj.CellMatrix(:,obj.ULQL:obj.DLQL), actual);
+            %uT = (uplink/obj.M) * obj.CellMatrix(:,obj.ULDR);
+            %dT = (downlink/obj.M) * obj.CellMatrix(:,obj.DLDR);
             
             % update queue length
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - [uT,dT];
+            %obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - [uT,dT];
             % replace negative values with 0
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = max(obj.CellMatrix(:,obj.ULQL:obj.DLQL), 0); 
+            %obj.CellMatrix(:,obj.ULQL:obj.DLQL) = max(obj.CellMatrix(:,obj.ULQL:obj.DLQL), 0); 
+            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - actual;
             
             % update throughput
-            obj.Throughput = obj.Throughput + [uT, dT];
+            %obj.Throughput = obj.Throughput + [uT, dT];
+            obj.Throughput = obj.Throughput + actual;
             
             % update counter
             obj.counter = obj.counter + 1;
@@ -117,12 +124,17 @@ classdef Cells < matlab.mixin.Copyable
                 
         function [minL, maxL, avgL, stdL] = queueStats(obj, direction) 
             %queueStats computes statistics for queue lengths
+            disp('Get called');
             switch direction
                 case Direction.Uplink
+                    %disp('Compute statistic');
                     [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.ULQL));
                 case Direction.Downlink
+                    %disp('Compute statistic22222');
                     [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DLQL));
             end
+            %disp('End of switch');
+            %minL
         end
         
         function updateQueueLength(obj) 

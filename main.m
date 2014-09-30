@@ -1,7 +1,7 @@
 clear; clc;
 
 % simulation parameters
-nsims = 1; %100;        
+nsims = 100; %100;        
 sim_time = 1000;    % sim_time / tau = number of frames
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster

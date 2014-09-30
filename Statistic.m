@@ -13,6 +13,7 @@ classdef Statistic < handle
     end
     
     properties (Constant)
+        %%Constatnt properties give names to columns
         NC = 11;    % number of columns
         TT = 1;     % index of Total Throughput column
         AUT = 2;    % index of Average UL Throughput column
@@ -32,28 +33,34 @@ classdef Statistic < handle
             %constructor initializes StatsMatrix
             %  n_sims - number of simulations  
             %  m - number of iterations
-            obj.StatsMatrix = zeros(n_sims, m, obj.NC);
+            % obj.StatsMatrix = zeros(n_sims, m, obj.NC);
+            obj.StatsMatrix = zeros(m, obj.NC, n_sims);
         end
         
         function update(obj,sim_idx,idx,cells) 
             %update add new statistics to StatsMatrix
             totalThroughputs = cells.getTotalThroughput();  % includes ul and dl
-            obj.StatsMatrix(sim_idx,idx,obj.TT) = sum(totalThroughputs);
+            % obj.StatsMatrix(sim_idx,idx,obj.TT) = sum(totalThroughputs);
+            obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughputs);
             
             avgThroughputs = cells.getAvgThrouhgput();
-            obj.StatsMatrix(sim_idx,idx,obj.AUT:obj.ADT) = mean(avgThroughputs,1);
+            %obj.StatsMatrix(sim_idx,idx,obj.AUT:obj.ADT) = mean(avgThroughputs,1);
+            obj.StatsMatrix(idx,obj.AUT:obj.ADT,sim_idx) = mean(avgThroughputs,1);
             
             [minU, maxU, avgU, stdU] = cells.queueStats(Direction.Uplink);
             [minD, maxD, avgD, stdD] = cells.queueStats(Direction.Downlink);
-            obj.StatsMatrix(sim_idx,idx,obj.MinUQ:obj.StdUQ) = [minU, maxU, avgU, stdU];
-            obj.StatsMatrix(sim_idx,idx,obj.MinDQ:obj.StdDQ) = [minD, maxD, avgD, stdD];
+            %obj.StatsMatrix(sim_idx,idx,obj.MinUQ:obj.StdUQ) = [minU, maxU, avgU, stdU];
+            %obj.StatsMatrix(sim_idx,idx,obj.MinDQ:obj.StdDQ) = [minD, maxD, avgD, stdD];
+            obj.StatsMatrix(idx,obj.MinUQ:obj.StdUQ,sim_idx) = [minU, maxU, avgU, stdU];
+            obj.StatsMatrix(idx,obj.MinDQ:obj.StdDQ,sim_idx) = [minD, maxD, avgD, stdD];
         end
         
         %%Getters
         function avgThroughput = getAvgThroughput(obj)
             %avgThroughput returns average total throughputs per time slot
             %  returns num_iterations x 1 vector
-            avgThroughput = mean(obj.StatsMatrix(:,:,obj.TT));
+            %avgThroughput = mean(obj.StatsMatrix(:,:,obj.TT));
+            avgThroughput = mean(obj.StatsMatrix(obj.TT,:,:));
         end
         
         function [avgULThroughput, avgDLThroughput] = getLinkThroughtput(obj)
