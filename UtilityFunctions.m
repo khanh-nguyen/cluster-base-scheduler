@@ -28,5 +28,17 @@ classdef UtilityFunctions
             %  and queue length
             profits = cells.getDataRate() .* cells.getQueueLength();
         end
+        
+        function profits = expQueueLength(cells)
+            %expQueueLength defines profit as function of data rates
+            %  and exponential of queue length
+            profits = cells.getDataRate() .* cells.getQueueLength() .* cells.getQueueLength();
+        end
+        
+        function profits = sqrtQueueLength(cells)
+            %expQueueLength defines profit as function of data rates
+            %  and exponential of queue length
+            profits = cells.getDataRate() .* sqrt(cells.getQueueLength());
+        end
     end
 end

@@ -26,6 +26,18 @@ classdef TestUtilityFunctions < matlab.unittest.TestCase
             expect = [20 280;270 540;160 360];
             testCase.verifyEqual(actual,expect);
         end
+        
+        function testExpQueueLength( testCase )
+            actual = UtilityFunctions.expQueueLength(testCase.cells);
+            expect = [40 3920;2430 9720;640 6480];
+            testCase.verifyEqual(actual,expect);
+        end
+        
+        function testSqrtQueueLength( testCase )
+            actual = UtilityFunctions.sqrtQueueLength(testCase.cells);
+            expect = [14.14 74.83;90 127.27;80 84.85];
+            testCase.verifyEqual(actual,expect,'RelTol',0.1);
+        end
     end
     
 end
