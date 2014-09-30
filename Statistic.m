@@ -84,13 +84,16 @@ classdef Statistic < handle
         end
         
         function [avgULQueue, avgDLQueue] = getAvgQueueLength(obj)
-            avgULQueue = mean(obj.StatsMatrix(:,:,obj.AvgUQ));
-            avgDLQueue = mean(obj.StatsMatrix(:,:,obj.AvgDQ));
+            %getAvgQueueLength returns the avg UL/DL queue length per frame
+            avgULQueue = mean(obj.StatsMatrix(:,obj.AvgUQ,:),3);
+            avgDLQueue = mean(obj.StatsMatrix(:,obj.AvgDQ,:),3);
         end
         
         function [stdULQueue, stdDLQueue] = getStdQueueLength(obj)
-            stdULQueue = mean(obj.StatsMatrix(:,:,obj.StdUQ));
-            stdDLQueue = mean(obj.StatsMatrix(:,:,obj.StdDQ));
+            %getStdQueueLength returns the avg std of UL/DL queue length per frame
+            
+            stdULQueue = mean(obj.StatsMatrix(:,obj.StdUQ,:),3);
+            stdDLQueue = mean(obj.StatsMatrix(:,obj.StdDQ,:),3);
         end
     end
 end

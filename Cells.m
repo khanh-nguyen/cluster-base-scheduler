@@ -117,14 +117,10 @@ classdef Cells < matlab.mixin.Copyable
             %queueStats computes statistics for queue lengths
             switch direction
                 case Direction.Uplink
-                    %disp('Compute statistic');
                     [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.ULQL));
                 case Direction.Downlink
-                    %disp('Compute statistic22222');
                     [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DLQL));
             end
-            %disp('End of switch');
-            %minL
         end
         
         function updateQueueLength(obj) 
