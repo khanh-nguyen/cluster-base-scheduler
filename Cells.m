@@ -115,7 +115,6 @@ classdef Cells < matlab.mixin.Copyable
                 
         function [minL, maxL, avgL, stdL] = queueStats(obj, direction) 
             %queueStats computes statistics for queue lengths
-            disp('Get called');
             switch direction
                 case Direction.Uplink
                     %disp('Compute statistic');

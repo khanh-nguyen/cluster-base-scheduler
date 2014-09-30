@@ -57,20 +57,14 @@ classdef Statistic < handle
         
         %%Getters
         function avgTotalThroughput = getAvgTotalThroughput(obj)
-            %avgTotalThroughput = mean(testCase.StatsMatrix(:,testCase.TT,:));
-%             disp('Actual total throughput');
-%             obj.StatsMatrix(:,obj.TT,:)
+            %getAvgTotalThroughput returns avg total throughput per time
+            %  frame
             avgTotalThroughput = mean(obj.StatsMatrix(:,obj.TT,:),3);
         end
         
-%         function avgThroughput = getAvgThroughput(obj)
-%             %avgThroughput returns average total throughputs per time slot
-%             %  returns num_iterations x 1 vector
-%             %avgThroughput = mean(obj.StatsMatrix(:,:,obj.TT));
-%             avgThroughput = mean(obj.StatsMatrix(obj.TT,:,:));
-%         end
-        
-        function [avgULThroughput, avgDLThroughput] = getAvgLinkThroughtput(obj)
+        function [avgULThroughput, avgDLThroughput] = getAvgLinkThroughput(obj)
+            %getAvgLinkThroughput returns avg U:/DL throughput per time
+            %  frame
             avgULThroughput = mean(obj.StatsMatrix(:,obj.AUT,:),3);    
             avgDLThroughput = mean(obj.StatsMatrix(:,obj.ADT,:),3);
         end
