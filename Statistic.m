@@ -69,14 +69,18 @@ classdef Statistic < handle
             avgDLThroughput = mean(obj.StatsMatrix(:,obj.ADT,:),3);
         end
         
-        function [minULQueue, minDLQueue] = getMinQueueLength(obj)
-            minULQueue = mean(obj.StatsMatrix(:,:,obj.MinUQ));
-            minDLQueue = mean(obj.StatsMatrix(:,:,obj.MinDQ));
+        function [minULQueue, minDLQueue] = getAvgMinQueueLength(obj)
+            %getMinQueueLength returns the avg min UL/DL queue length per frame
+
+            minULQueue = mean(obj.StatsMatrix(:,obj.MinUQ,:),3);
+            minDLQueue = mean(obj.StatsMatrix(:,obj.MinDQ,:),3);
         end
         
-        function [maxULQueue, maxDLQueue] = getMaxQueueLength(obj)
-            maxULQueue = mean(obj.StatsMatrix(:,:,obj.MaxUQ));
-            maxDLQueue = mean(obj.StatsMatrix(:,:,obj.MaxDQ));
+        function [maxULQueue, maxDLQueue] = getAvgMaxQueueLength(obj)
+            %getAvgMaxQueueLength returns the avg max UL/DL queue length per frame
+            
+            maxULQueue = mean(obj.StatsMatrix(:,obj.MaxUQ,:),3);
+            maxDLQueue = mean(obj.StatsMatrix(:,obj.MaxDQ,:),3);
         end
         
         function [avgULQueue, avgDLQueue] = getAvgQueueLength(obj)
