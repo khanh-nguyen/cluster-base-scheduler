@@ -2,21 +2,10 @@ classdef UtilityFunctions
     %UtilityFunctions computes the downlink and uplink profits for cells
     % 
     methods (Static)
-%         function profits = linearQueueLength(cells)
-%             %linearQueueLength utility proportional to queue length
-%             
-%             avgThroughput = cells.getAvgThrouhgput();
-%             profits = cells.CellMatrix(:,4:5) ./ avgThroughput;    %FIXME: try to use Cell's API
-%         end
-%         
-%         function profits = expQueueLength(cells)
-%             %expQueueLength utility proportional to the exponential of 
-%             %  queue length
-%             
-%             avgThroughput = cells.getAvgThrouhgput();
-%             profits = exp(cells.CellMatrix(:,4:5)) ./ avgThroughput; %FIXME: try to use Cells' API
-%         end
-        
+        function profits = throughputBase(cells)
+            profits = cells.getPromissingThroughput();
+        end
+
         function profits = dataRateBase(cells)
             %dataRateBase returns cells' data rates, including UL and DL
             

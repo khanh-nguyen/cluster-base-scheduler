@@ -31,8 +31,11 @@ classdef PlotTool < handle
         function plotTotalThroughput(obj)
             figure; hold on;
             for i = 1:length(obj.StatsList)
-                obj.plotHelper(obj.StatsList(i).getAvgThroughput(),i);
+                obj.plotHelper(obj.StatsList(i).getAvgTotalThroughput(),i);
+                %legend(i);
             end
+            xlabel('Time frame');
+            ylabel('Average total throughput');
         end
         
         function plotMaxQueueLength(obj)
@@ -44,8 +47,8 @@ classdef PlotTool < handle
             end
         end
         
-        function plotHelper(obj,data,i)
-            plot(data,[obj.linestyles{i} obj.Markers(i)],...
+        function p = plotHelper(obj,data,i)
+            p = plot(data,[obj.linestyles{i} obj.Markers(i)],...
                 'Color', obj.MarkerEdgeColors(i,:));
         end
     end

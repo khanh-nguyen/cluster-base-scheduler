@@ -1,15 +1,15 @@
 clear; clc;
 
 % simulation parameters
-nsims = 100; %100;        
-sim_time = 1000;    % sim_time / tau = number of frames
+nsims = 10; %100;        
+sim_time = 100;    % sim_time / tau = number of frames
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
 
 alg = GreedyAlg;           % setting scheduling algorithm
 
-% The optimal scheduler
+% The datarate base scheduler
 s1 = SingleFrameScheduler(M);   % scheduler needs to know the number of cells
 s1.setSchedulingAlg(alg);
 s1.setUtilityFunction(@UtilityFunctions.dataRateBase);
@@ -19,11 +19,18 @@ s2 = SingleFrameScheduler(M);
 s2.setSchedulingAlg(alg);
 s2.setUtilityFunction(@UtilityFunctions.dataRateAndQueueBase);
 
+% throughput base scheduler
+s3 = SingleFrameScheduler(M);
+s3.setSchedulingAlg(alg);
+s3.setUtilityFunction(@UtilityFunctions.throughputBase);
+
 % stat
 stat = Statistic(nsims, sim_time/tau);
 stat2 = Statistic(nsims, sim_time/tau);
+stat3 = Statistic(nsims, sim_time/tau);
 
 for s=1:nsims
+    fprintf('\n Simulation round %d\n',s);
     timer = 0;
     
     % create a cluster of N cells, and number of subframes M
@@ -35,14 +42,17 @@ for s=1:nsims
     cells.setDataRate(dataRate);
     
     cells2 = copy(cells);
+    cells3 = copy(cells);
     
     idx = 1;
     while (timer < sim_time)
+        fprintf('.');
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
         link_demand = DataGenerator.generateLinkDemand(N,M);
         cells.setDemand(link_demand);
         cells2.setDemand(link_demand);
+        cells3.setDemand(link_demand);
         
         % 2. If not yet configured, configure the cluster 
         if s1.needReconfiguration() 
@@ -50,19 +60,26 @@ for s=1:nsims
         end
         
         if s2.needReconfiguration()
-            [mu2, md2] = s2.configure(cells);
+            [mu2, md2] = s2.configure(cells2);
+        end
+        
+        if s3.needReconfiguration()
+            [mu3, md3] = s3.configure(cells3);
         end
         
         % 3. All cells transmit and receive as configured
         cells.transmit(mu, md);
         cells2.transmit(mu2, md2);
+        cells3.transmit(mu3, md3);
         
         % 4. Update statistics
         stat.update(s, idx, cells);
         stat2.update(s, idx, cells2);
+        stat3.update(s, idx, cells3);
         idx = idx + 1;
         
         % 5. Increase timer
         timer = timer + tau;
     end
 end
+fprintf('\n');

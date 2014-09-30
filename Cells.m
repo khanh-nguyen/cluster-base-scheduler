@@ -91,6 +91,12 @@ classdef Cells < matlab.mixin.Copyable
             queueLength = obj.CellMatrix(:,obj.ULQL:obj.DLQL);
         end
         
+        %TODO: need unit test for this function
+        function promiseThroughput = getPromissingThroughput(obj)
+            promiseThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
+                             .* obj.CellMatrix(:,obj.UL:obj.DL);
+            promiseThroughput = promiseThroughput / obj.M;
+        end
         %%Utility functions
         function actual = transmit(obj, uplink, downlink)
             %transmit sends data upward and downward

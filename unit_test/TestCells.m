@@ -68,6 +68,11 @@ classdef TestCells < matlab.unittest.TestCase
             expect = [6 10 7.3333 2.3094];
             testCase.verifyEqual([x y z t], expect, 'RelTol', 0.1);
         end
+        
+        function testPromissingThroughput(testCase)
+            expect = [2 14;9 18;4 18];
+            testCase.verifyEqual(testCase.cells.getPromissingThroughput(), expect);
+        end
     end
 end
 

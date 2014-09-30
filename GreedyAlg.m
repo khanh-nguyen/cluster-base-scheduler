@@ -13,9 +13,11 @@ classdef GreedyAlg < SchedulingAlgorithm
             %  each tuple contains the profit and number of subframes with
             %  that amount of profit
             %  See our algorithm for details (set A and B)
+            %  links - Nx1 column represents the UL/DL demands
+            %  profits - Nx1 column represents the profits for scheduling UL/DL subframe
             
             m = length(links);
-            [links, sortedIndex] = sort(links, 2, 'descend');
+            [links, sortedIndex] = sort(links, 'descend');
             profits = profits(sortedIndex);
             results = zeros(m,2);
             
@@ -41,7 +43,7 @@ classdef GreedyAlg < SchedulingAlgorithm
             
             % sort results in reverse order 
             results = results(1:idx, :);
-            [~, index] = sort(results(:,1),1, 'descend');
+            [~, index] = sort(results(:,1), 'descend');
             results = results(index,:);
         end
         
