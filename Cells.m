@@ -63,7 +63,6 @@ classdef Cells < matlab.mixin.Copyable
         
         %%Getters
         function dataRates = getDataRate(obj)
-            %dataRates returns the UL/DL data rates of cells
             dataRates = obj.CellMatrix(:,obj.ULDR:obj.DLDR);
         end
         
@@ -74,9 +73,6 @@ classdef Cells < matlab.mixin.Copyable
             %  the case when counter == 0 is not needed
             
             if (obj.counter == 0) 
-               % first time, no throughput yet
-               %avgThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
-               %             .* ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M );
                avgThroughput = repmat([0 0], obj.N, 1);
             else     
                avgThroughput = obj.Throughput / obj.counter;
@@ -102,20 +98,15 @@ classdef Cells < matlab.mixin.Copyable
             %  all cells are configured with the same number of UL and DL
             %  actual is a 1x2 vector
             
+            % actual data transmitted
             actual = (repmat([uplink downlink],obj.N,1) ...
                     .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             actual = min(obj.CellMatrix(:,obj.ULQL:obj.DLQL), actual);
-            %uT = (uplink/obj.M) * obj.CellMatrix(:,obj.ULDR);
-            %dT = (downlink/obj.M) * obj.CellMatrix(:,obj.DLDR);
             
             % update queue length
-            %obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - [uT,dT];
-            % replace negative values with 0
-            %obj.CellMatrix(:,obj.ULQL:obj.DLQL) = max(obj.CellMatrix(:,obj.ULQL:obj.DLQL), 0); 
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - actual;
             
             % update throughput
-            %obj.Throughput = obj.Throughput + [uT, dT];
             obj.Throughput = obj.Throughput + actual;
             
             % update counter
@@ -144,8 +135,8 @@ classdef Cells < matlab.mixin.Copyable
             %  queue_length = queue_length + schedule_rate
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = ...
                             obj.CellMatrix(:,obj.ULQL:obj.DLQL) ... 
-                         +  ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M ) ...
-                         .* obj.CellMatrix(:,obj.ULDR:obj.DLDR);
+                         +  ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M ...
+                         .* obj.CellMatrix(:,obj.ULDR:obj.DLDR) );
         end
     end
     

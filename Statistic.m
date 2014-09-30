@@ -43,7 +43,7 @@ classdef Statistic < handle
             % obj.StatsMatrix(sim_idx,idx,obj.TT) = sum(totalThroughputs);
             obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughputs);
             
-            avgThroughputs = cells.getAvgThrouhgput();
+            avgThroughputs = cells.getAvgThroughput();
             %obj.StatsMatrix(sim_idx,idx,obj.AUT:obj.ADT) = mean(avgThroughputs,1);
             obj.StatsMatrix(idx,obj.AUT:obj.ADT,sim_idx) = mean(avgThroughputs,1);
             
@@ -56,16 +56,23 @@ classdef Statistic < handle
         end
         
         %%Getters
-        function avgThroughput = getAvgThroughput(obj)
-            %avgThroughput returns average total throughputs per time slot
-            %  returns num_iterations x 1 vector
-            %avgThroughput = mean(obj.StatsMatrix(:,:,obj.TT));
-            avgThroughput = mean(obj.StatsMatrix(obj.TT,:,:));
+        function avgTotalThroughput = getAvgTotalThroughput(obj)
+            %avgTotalThroughput = mean(testCase.StatsMatrix(:,testCase.TT,:));
+%             disp('Actual total throughput');
+%             obj.StatsMatrix(:,obj.TT,:)
+            avgTotalThroughput = mean(obj.StatsMatrix(:,obj.TT,:),3);
         end
         
-        function [avgULThroughput, avgDLThroughput] = getLinkThroughtput(obj)
-            avgULThroughput = mean(obj.StatsMatrix(:,:,obj.AUT));    
-            avgDLThroughput = mean(obj.StatsMatrix(:,:,obj.ADT));
+%         function avgThroughput = getAvgThroughput(obj)
+%             %avgThroughput returns average total throughputs per time slot
+%             %  returns num_iterations x 1 vector
+%             %avgThroughput = mean(obj.StatsMatrix(:,:,obj.TT));
+%             avgThroughput = mean(obj.StatsMatrix(obj.TT,:,:));
+%         end
+        
+        function [avgULThroughput, avgDLThroughput] = getAvgLinkThroughtput(obj)
+            avgULThroughput = mean(obj.StatsMatrix(:,obj.AUT,:),3);    
+            avgDLThroughput = mean(obj.StatsMatrix(:,obj.ADT,:),3);
         end
         
         function [minULQueue, minDLQueue] = getMinQueueLength(obj)
