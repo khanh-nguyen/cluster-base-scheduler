@@ -40,8 +40,10 @@ classdef Statistic < handle
         function update(obj,sim_idx,idx,cells) 
             %update add new statistics to StatsMatrix
             totalThroughputs = cells.getTotalThroughput();  % includes ul and dl
+            validateattributes(totalThroughputs,{'numeric'},{'size',[1,2]});
             % obj.StatsMatrix(sim_idx,idx,obj.TT) = sum(totalThroughputs);
             obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughputs);
+            fprintf('id=%d,sim_idx=%d,Gain: %f\n',idx,sim_idx,sum(totalThroughputs));
             
             avgThroughputs = cells.getAvgThroughput();
             %obj.StatsMatrix(sim_idx,idx,obj.AUT:obj.ADT) = mean(avgThroughputs,1);
@@ -60,6 +62,10 @@ classdef Statistic < handle
             %getAvgTotalThroughput returns avg total throughput per time
             %  frame
             avgTotalThroughput = mean(obj.StatsMatrix(:,obj.TT,:),3);
+            disp('AvgTotalThrouhgput');
+            size(avgTotalThroughput)
+            validateattributes(avgTotalThroughput,{'numeric'},...
+                               {'size',[size(obj.StatsMatrix,1),1]});
         end
         
         function [avgULThroughput, avgDLThroughput] = getAvgLinkThroughput(obj)

@@ -66,6 +66,15 @@ classdef TestGreedyAlg < matlab.unittest.TestCase
             testCase.verifyEqual([x, y],expect);
         end
         
+        function testMerge2(testCase)
+            A = [300 2;200 2];
+            B = [150 3;100 5;50 1];
+            m = 10;
+            [x, y] = testCase.alg.merge(A,B,m);
+            expect = [4 6];
+            testCase.verifyEqual([x, y],expect);
+        end
+        
         function testSchedule(testCase) 
             ul = [7;4;4;4;3];
             dl = [3;2;5;6;7];
@@ -87,6 +96,7 @@ classdef TestGreedyAlg < matlab.unittest.TestCase
             expect = [3 7];
             testCase.verifyEqual([x,y],expect);
         end
+        
     end
     
 end

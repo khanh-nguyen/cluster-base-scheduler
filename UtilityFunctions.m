@@ -12,6 +12,10 @@ classdef UtilityFunctions
             profits = cells.getDataRate();
         end
         
+        function profits = expDataRate(cells)
+            profits = cells.getDataRate() .* cells.getDataRate();
+        end
+        
         function profits = dataRateAndQueueBase(cells)
             %dataRateAndQueueBase defines profit as function of data rates
             %  and queue length

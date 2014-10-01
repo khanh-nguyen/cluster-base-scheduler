@@ -31,6 +31,14 @@ classdef DataGenerator
             result = bsxfun(@rdivide, result, sum(result,2));
             demand = round(bsxfun(@times, result, tot_sum));
         end
+        
+        function extremeRate = generateExtremeDemand(N,M)
+%             extremeRate = zeros(N,2);
+%             mid = floor(N/2);
+%             extremeRate(1:mid,:) = repmat([1 9],mid,1);
+%             extremeRate(mid+1:N,:) = repmat([9 1],N-mid,1);
+              extremeRate = repmat([1 M-1],N,1);
+        end
     end
     
 end

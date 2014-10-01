@@ -4,8 +4,14 @@ classdef GreedyAlg < SchedulingAlgorithm
     methods (Static)
         function [ul, dl] = schedule(uplinks, downlinks, uProfit, dProfit, m)
             A = GreedyAlg.computeSubframeProfits(uplinks, uProfit);
+%             disp('Alg. A:');
+%             A
             B = GreedyAlg.computeSubframeProfits(downlinks, dProfit);
+%             disp('Alg. B:');
+%             B
             [ul, dl] = GreedyAlg.merge(A, B, m);
+%             disp('Alg. ul');
+%             ul
         end
         
         function pairs = computeSubframeProfits(links, profits) 
@@ -65,6 +71,21 @@ classdef GreedyAlg < SchedulingAlgorithm
                     b = b + c;
                     j = j + 1;
                 end
+                m = m - c;
+            end
+            
+            % handle left over
+            while i <= size(A,1) && m > 0
+                c = min(A(i,2), m);
+                a = a + c;
+                i = i + 1;
+                m = m - c;
+            end
+            
+            while j <= size(B,1) && m > 0
+                c = min(B(j,2), m);
+                b = b + c;
+                j = j + 1;
                 m = m - c;
             end
         end

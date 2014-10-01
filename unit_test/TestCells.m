@@ -27,11 +27,27 @@ classdef TestCells < matlab.unittest.TestCase
             expect = [2 7; 3 6; 1 9];
             testCase.verifyEqual(testCase.cells.getDemand(), expect);
             
-             testCase.cells.setDemand([2 7; 3 6; 1 9]);
-             expect = [2 10;3 8;1 14];
-             testCase.verifyEqual(testCase.cells.getDemand(), expect);
+            testCase.cells.setDemand([2 7; 3 6; 1 9]);
+            expect = [2 10;3 8;1 14];
+            testCase.verifyEqual(testCase.cells.getDemand(), expect);
         end
         
+        function testRemain(testCase)
+            expect = [0 0;0 0;0 0];
+            testCase.verifyEqual(testCase.cells.getRemainSubframes(), expect);
+            
+            testCase.cells.transmit(4,5);
+            expect = [0 2;0 1;0 4];
+            testCase.verifyEqual(testCase.cells.getRemainSubframes(), expect);
+            
+            testCase.cells.setDemand([4 3; 2 5; 5 6]);
+            expect = [0 2;0 1;0 4];
+            testCase.verifyEqual(testCase.cells.getRemainSubframes(), expect);
+            
+            testCase.cells.transmit(2,6);
+            expect = [2 0;0 0;3 4];
+            testCase.verifyEqual(testCase.cells.getRemainSubframes(), expect);
+        end
         
         function testAverageThroughput(testCase)
             %expect = [2 14; 9 18; 4 18];
@@ -65,20 +81,20 @@ classdef TestCells < matlab.unittest.TestCase
         function testQueueStatistic(testCase) 
             % FIXME: we should set some tolerance instead of rounding
             % queue at the beginning: [2 14;9 18;4 18];
-            [x y z t] = testCase.cells.queueStats(Direction.Uplink);
+            [x, y, z, t] = testCase.cells.queueStats(Direction.Uplink);
             expect = [2 9 5 3.6056];
             testCase.verifyEqual([x y z t], expect, 'RelTol', 0.1);
             
-            [x y z t] = testCase.cells.queueStats(Direction.Downlink);
+            [x, y, z, t] = testCase.cells.queueStats(Direction.Downlink);
             expect = [14 18 16.6667 2.3094];
             testCase.verifyEqual([x y z t], expect, 'RelTol', 0.1);
             
             testCase.cells.transmit(3,4);
-            [x y z t] = testCase.cells.queueStats(Direction.Uplink);
+            [x, y, z, t] = testCase.cells.queueStats(Direction.Uplink);
             expect = [0 0 0 0];
             testCase.verifyEqual([x y z t], expect, 'RelTol', 0.1);
             
-            [x y z t] = testCase.cells.queueStats(Direction.Downlink);
+            [x, y, z, t] = testCase.cells.queueStats(Direction.Downlink);
             expect = [6 10 7.3333 2.3094];
             testCase.verifyEqual([x y z t], expect, 'RelTol', 0.1);
         end

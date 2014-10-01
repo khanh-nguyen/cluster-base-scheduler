@@ -29,6 +29,7 @@ classdef Scheduler < handle
             uplinks = demands(:,1);
             downlinks = demands(:,2);
             
+            
             % compute the subframe-base profits
             [uProfits, dProfits] = Scheduler.computeSubframeProfits(cells, obj.utilityFunc);
             

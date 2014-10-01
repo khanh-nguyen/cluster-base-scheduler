@@ -112,20 +112,26 @@ classdef Cells < matlab.mixin.Copyable
             %  uplink and downlink are calculated by scheduling algorithm
             %  all cells are configured with the same number of UL and DL
             %  actual is a 1x2 vector
-                        
+%            fprintf('Trying to transmit %d ul, %d dl\n',uplink,downlink);           
             actual_sf = min(repmat([uplink downlink],obj.N,1), ...
                              obj.CellMatrix(:,obj.UL:obj.DL));
             
-            
+%             disp('Actual transmit');
+%             actual_sf
             % actual data transmitted
             actual = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             
             % update queue length
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - actual;
             
+%             disp('Transmitted: ');
+%             actual
+%             
             % update throughput
             % NOTE: This is accumulate throughput up until current point
             obj.Throughput = obj.Throughput + actual;
+%             disp('Throughput ');
+%             obj.Throughput
             
             % update remaining subframes
             obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
