@@ -56,7 +56,7 @@ classdef Cells < matlab.mixin.Copyable
             attributes = {'size',[obj.N,2]};
             validateattributes(demands,classes,attributes);
             
-            % number of demanded UL/DL
+            % number of demanded UL/DL: demand + remain
             obj.CellMatrix(:,obj.UL:obj.DL) = demands ...
                                          + obj.CellMatrix(:,obj.UR:obj.DR);
             
@@ -71,9 +71,6 @@ classdef Cells < matlab.mixin.Copyable
         
         function avgThroughput = getAvgThroughput(obj)
             %getAvgThrouhgput returns average [uT,dT] until this moment
-            %  FIXME: as we don't need avgThrouhgput for utility funciton,
-            %  this function can be rewriten in more efficient way, 
-            %  the case when counter == 0 is not needed
             
             if (obj.counter == 0) 
                avgThroughput = repmat([0 0], obj.N, 1);
@@ -83,7 +80,7 @@ classdef Cells < matlab.mixin.Copyable
         end
         
         function totalThrouhghput = getTotalThroughput(obj)
-            %getTotalThroughput returns 1x2 matrix of total throughput
+            %getTotalThroughput returns 1x2 matrix of total ul/dl throughput
             
             totalThrouhghput = sum(obj.Throughput,1);
         end
@@ -95,7 +92,7 @@ classdef Cells < matlab.mixin.Copyable
         end
         
         function remain = getRemainSubframes(obj)
-            remain = obj.CellMatrix(obj.UR:obj.DR);
+            remain = obj.CellMatrix(:,obj.UR:obj.DR);
         end
         
         function demand = getDemand(obj)
@@ -108,6 +105,7 @@ classdef Cells < matlab.mixin.Copyable
                              .* obj.CellMatrix(:,obj.UL:obj.DL);
             promiseThroughput = promiseThroughput / obj.M;
         end
+        
         %%Utility functions
         function actual = transmit(obj, uplink, downlink)
             %transmit sends data upward and downward
@@ -126,6 +124,7 @@ classdef Cells < matlab.mixin.Copyable
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - actual;
             
             % update throughput
+            % NOTE: This is accumulate throughput up until current point
             obj.Throughput = obj.Throughput + actual;
             
             % update remaining subframes
