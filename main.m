@@ -49,8 +49,8 @@ for s=1:nsims
         fprintf('.');
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        %link_demand = DataGenerator.generateLinkDemand(N,M);
-        link_demand = DataGenerator.fixtureDemand();
+        link_demand = DataGenerator.generateLinkDemand(N,M);
+        %link_demand = DataGenerator.fixtureDemand();
         cells.setDemand(link_demand);
         cells2.setDemand(link_demand);
         cells3.setDemand(link_demand);
