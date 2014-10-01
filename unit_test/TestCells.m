@@ -19,6 +19,20 @@ classdef TestCells < matlab.unittest.TestCase
             testCase.verifyEqual(testCase.cells.getDataRate(), expect);
         end
         
+        function testDemand(testCase)
+            expect = [2 7; 3 6; 1 9];
+            testCase.verifyEqual(testCase.cells.getDemand(), expect);
+            
+            testCase.cells.transmit(3,4);
+            expect = [2 7; 3 6; 1 9];
+            testCase.verifyEqual(testCase.cells.getDemand(), expect);
+            
+             testCase.cells.setDemand([2 7; 3 6; 1 9]);
+             expect = [2 10;3 8;1 14];
+             testCase.verifyEqual(testCase.cells.getDemand(), expect);
+        end
+        
+        
         function testAverageThroughput(testCase)
             %expect = [2 14; 9 18; 4 18];
             expect = [0 0; 0 0; 0 0];
@@ -73,6 +87,7 @@ classdef TestCells < matlab.unittest.TestCase
             expect = [2 14;9 18;4 18];
             testCase.verifyEqual(testCase.cells.getPromissingThroughput(), expect);
         end
+        
     end
 end
 

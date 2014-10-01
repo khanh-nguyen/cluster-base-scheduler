@@ -12,13 +12,15 @@ classdef Cells < matlab.mixin.Copyable
     end
     
     properties (Constant)
-        NC = 6;     % number of columns in CellMatrix, i.e. number of attributes
+        NC = 8;     % number of columns in CellMatrix, i.e. number of attributes
         ULDR = 1;   % column index of Uplink Datarate
         DLDR = 2;   % column index of Downlink Datarate
         UL = 3;     % column index of demand UL subframes
         DL = 4;     % column index of demand DL subframes
         ULQL = 5;   % column index of UL queue length
         DLQL = 6;   % column index of DL queue length 
+        UR = 7;     % number of remaining UL subframes
+        DR = 8;     % number of remaining DL subframes
     end
     
     methods
@@ -55,7 +57,8 @@ classdef Cells < matlab.mixin.Copyable
             validateattributes(demands,classes,attributes);
             
             % number of demanded UL/DL
-            obj.CellMatrix(:,obj.UL:obj.DL) = demands;
+            obj.CellMatrix(:,obj.UL:obj.DL) = demands ...
+                                         + obj.CellMatrix(:,obj.UR:obj.DR);
             
             % calculate queue length
             obj.updateQueueLength();
@@ -91,6 +94,14 @@ classdef Cells < matlab.mixin.Copyable
             queueLength = obj.CellMatrix(:,obj.ULQL:obj.DLQL);
         end
         
+        function remain = getRemainSubframes(obj)
+            remain = obj.CellMatrix(obj.UR:obj.DR);
+        end
+        
+        function demand = getDemand(obj)
+            demand = obj.CellMatrix(:,obj.UL:obj.DL);
+        end
+        
         %TODO: need unit test for this function
         function promiseThroughput = getPromissingThroughput(obj)
             promiseThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
@@ -103,11 +114,13 @@ classdef Cells < matlab.mixin.Copyable
             %  uplink and downlink are calculated by scheduling algorithm
             %  all cells are configured with the same number of UL and DL
             %  actual is a 1x2 vector
+                        
+            actual_sf = min(repmat([uplink downlink],obj.N,1), ...
+                             obj.CellMatrix(:,obj.UL:obj.DL));
+            
             
             % actual data transmitted
-            actual = (repmat([uplink downlink],obj.N,1) ...
-                    .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
-            actual = min(obj.CellMatrix(:,obj.ULQL:obj.DLQL), actual);
+            actual = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             
             % update queue length
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - actual;
@@ -115,6 +128,9 @@ classdef Cells < matlab.mixin.Copyable
             % update throughput
             obj.Throughput = obj.Throughput + actual;
             
+            % update remaining subframes
+            obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
+                        
             % update counter
             obj.counter = obj.counter + 1;
         end
@@ -132,13 +148,12 @@ classdef Cells < matlab.mixin.Copyable
         function updateQueueLength(obj) 
             %updateQueueLength updates queue length every time demand
             %  changes
-            %  schedule_rate = data_ratio * data_rate
-            %  queue_length = queue_length + schedule_rate
+            %  queue_length = data_rate * demand
             obj.CellMatrix(:,obj.ULQL:obj.DLQL) = ...
-                            obj.CellMatrix(:,obj.ULQL:obj.DLQL) ... 
-                         +  ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M ...
-                         .* obj.CellMatrix(:,obj.ULDR:obj.DLDR) );
+                        ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M )...
+                       .* obj.CellMatrix(:,obj.ULDR:obj.DLDR) ;
         end
+        
     end
     
     methods (Static)
