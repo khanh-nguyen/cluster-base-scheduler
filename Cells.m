@@ -66,6 +66,10 @@ classdef Cells < matlab.mixin.Copyable
             dataRates = obj.CellMatrix(:,obj.ULDR:obj.DLDR);
         end
         
+        function demands = getDemand(obj)
+            demands = obj.CellMatrix(:,obj.UL:obj.DL);
+        end
+        
         function avgThroughput = getAvgThroughput(obj)
             %getAvgThrouhgput returns average [uT,dT] until this moment
             %  FIXME: as we don't need avgThrouhgput for utility funciton,

@@ -31,6 +31,14 @@ classdef DataGenerator
             result = bsxfun(@rdivide, result, sum(result,2));
             demand = round(bsxfun(@times, result, tot_sum));
         end
+        
+        function demand = fixtureDemand() 
+            %N = 20
+            demand = [4 6;4 6;3 7;3 7;4 6;
+                      3 5;4 5;4 5;4 4;4 6;
+                      4 6;3 6;3 7;3 5;4 6;
+                      2 8;2 8;1 9;1 9;4 6;];
+        end
     end
     
 end

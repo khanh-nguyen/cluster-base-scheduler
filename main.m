@@ -1,8 +1,8 @@
 clear; clc;
 
 % simulation parameters
-nsims = 10; %100;        
-sim_time = 100;    % sim_time / tau = number of frames
+nsims = 100; %100;        
+sim_time = 1000;    % sim_time / tau = number of frames
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
@@ -49,7 +49,8 @@ for s=1:nsims
         fprintf('.');
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        link_demand = DataGenerator.generateLinkDemand(N,M);
+        %link_demand = DataGenerator.generateLinkDemand(N,M);
+        link_demand = DataGenerator.fixtureDemand();
         cells.setDemand(link_demand);
         cells2.setDemand(link_demand);
         cells3.setDemand(link_demand);
