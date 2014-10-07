@@ -68,13 +68,15 @@ for s=1:nsims
     cells5 = copy(cells);
     cells6 = copy(cells);
 
+     fixtureDemand = DataGenerator.generateExtremeLTEStandardDemand(N,sim_time/tau);
     
     idx = 1;
     while (timer < sim_time)
         fprintf('.');
         % 1. Generate cells' demands, including rate and ratio
         % FIXME: what distribution here????
-        link_demand = DataGenerator.generateLTEStandardDemand(N,M);
+        % link_demand = DataGenerator.generateLTEStandardDemand(N,M);
+        link_demand = fixtureDemand(:,(2*idx-1):(2*idx));
         cells.setDemand(link_demand);
         cells2.setDemand(link_demand);
         cells3.setDemand(link_demand);

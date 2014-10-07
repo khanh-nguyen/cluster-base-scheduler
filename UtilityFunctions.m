@@ -2,10 +2,6 @@ classdef UtilityFunctions
     %UtilityFunctions computes the downlink and uplink profits for cells
     % 
     methods (Static)
-        function profits = throughputBase(cells)
-            profits = cells.getPromissingThroughput();
-        end
-
         function profits = dataRateBase(cells)
             %dataRateBase returns cells' data rates, including UL and DL
             
@@ -25,7 +21,8 @@ classdef UtilityFunctions
         function profits = expQueueLength(cells)
             %expQueueLength defines profit as function of data rates
             %  and exponential of queue length
-            profits = cells.getDataRate() .* cells.getQueueLength() .* cells.getQueueLength();
+            %  queue length is measured in the number of subframes
+            profits = cells.getDataRate() .* exp(cells.getQueueLength());
         end
         
         function profits = sqrtQueueLength(cells)
