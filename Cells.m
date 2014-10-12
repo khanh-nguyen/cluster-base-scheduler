@@ -124,6 +124,10 @@ classdef Cells < matlab.mixin.Copyable
             validateattributes(realQL,{'numeric'},{'size',[obj.N,2]});
         end
         
+        function cellRates = getCellRate(obj, id) 
+            cellRates = obj.CellMatrix(id, obj.ULDR:obj.DLDR);
+        end
+        
         %% Utility functions
         function transmitted = transmit(obj, uplink, downlink)
             %transmit sends data upward and downward

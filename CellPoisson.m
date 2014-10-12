@@ -9,6 +9,9 @@ classdef CellPoisson < handle
         next_arrival_idx = 1;   % index for lookup in arrival_period[]
         userList;           % array of users
         M;
+        amount_demand = zeros(1,2);
+        ulRate = 5;        % 50Mbps
+        dlRate = 20;       % 100Mbps
     end
     
     methods
@@ -51,13 +54,18 @@ classdef CellPoisson < handle
             end
         end
         
+        function setDataRate(obj, ulRate, dlRate)
+            obj.ulRate = ulRate;
+            obj.dlRate = dlRate;
+        end
+        
         function id = getId(obj) 
             id = obj.id;
         end
         
         function [ul, dl] = getDemand(obj)
-            ul = 0;
-            dl = 0;
+            ul = obj.amount_demand(1);
+            dl = obj.amount_demand(2);
             for user = obj.userList
                 [u,d] = user.demand();
                 ul = ul + u;
@@ -71,14 +79,25 @@ classdef CellPoisson < handle
                 ulsf = 0;
                 dlsf = 0;
             else
-                ulsf = floor((ul * obj.M) / (ul + dl));
-                % dlsf = obj.M - ulsf;
-                dlsf = floor((dl * obj.M) / (ul + dl));
+                subframe_count = [ul, dl] ./ ([obj.ulRate, obj.dlRate] / 1000);
+                %ulsf = floor((ul * obj.M) / (ul + dl));
+                %dlsf = floor((dl * obj.M) / (ul + dl));
+                ulsf = ceil(subframe_count(1));
+                dlsf = ceil(subframe_count(2));
+                if ulsf + dlsf > obj.M
+                    ulsf = obj.M - dlsf;
+                end
             end
         end
         
         function x = getNumberUser(obj)
             x = length(obj.userList);
+        end
+        
+        function updateDemand(obj, transmitted)
+            validateattributes(transmitted,{'numeric'},{'size',[1,2]});
+            obj.amount_demand = obj.amount_demand - transmitted;
+            obj.amount_demand = max(obj.amount_demand, 0);
         end
     end
     

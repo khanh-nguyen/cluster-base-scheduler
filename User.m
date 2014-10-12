@@ -30,8 +30,8 @@ classdef User < handle
             % infinitely. We don't care if data is really transmitted. It
             % will be accumulated at cell's queue if it's not transmitted
             if obj.ULDemand > 0
-                frame_limit = obj.ULRate / 100; % rate measured in Kbps,
-                                                % rate / 100 = Kb/frame
+                frame_limit = obj.ULRate / 100; % rate measured in Mbps,
+                                                % rate / 100 = Mb/frame
                 ul = min(obj.ULDemand, frame_limit);
                 obj.ULDemand = obj.ULDemand - ul;
             else
@@ -39,7 +39,7 @@ classdef User < handle
             end
             
             if obj.DLDemand > 0
-                frame_limit = obj.DLRate / 100; % rate measured in Kbps,
+                frame_limit = obj.DLRate / 100; % rate measured in Mbps,
                                                 % rate / 100 = Kb/frame
                 dl = min(obj.DLDemand, frame_limit);
                 obj.DLDemand = obj.DLDemand - dl;

@@ -11,13 +11,30 @@ classdef DataGenerator
         % need an array of App category here
         % data size is number_of_Kb / 1000
         % row_format: ULRate, DLRate, minULSize, maxULSize, minDLSize, maxDLSize
-        appCategory = [ 300, 300, 36, 180, 36, 180; % Skype: 2-5 minutes
-                          0, 200,  0,   0, 12, 60; % Web browsing: 1-5 min
-                          0,1000,  0,   0, 60,300; % Youtube watch: 1-5 min
-                       1000,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
-                          0, 160,  0,   0, 10, 48; % Spotify: 1-5 min
-                        500,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+%         appCategory = [ 300, 300, 36, 180, 36, 180; % Skype: 2-5 minutes
+%                           0, 200,  0,   0, 12, 60; % Web browsing: 1-5 min
+%                           0,1000,  0,   0, 60,300; % Youtube watch: 1-5 min
+%                        1000,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
+%                           0, 160,  0,   0, 10, 48; % Spotify: 1-5 min
+%                         500,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+%                       ];
+
+% The demand is measured in Mb
+        appCategory = [ 0.3, 0.3, 36,  90, 36, 90; % Skype: 2-5 minutes
+                          0, 0.2,  0,   0, 12, 60; % Web browsing: 1-5 min
+                          0, 1.0,  0,   0, 60,300; % Youtube watch: 1-5 min
+                        1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
+                          0,0.16,  0,   0, 10, 48; % Spotify: 1-5 min
+                        0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
                       ];
+
+%         appCategory = [ 0.3, 0.3, 18,  25, 18, 25; % Skype: 0.5-0.x minutes
+%                           0, 0.2,  0,   0,  3, 15; % Web browsing: x-y min
+%                           0, 1.0,  0,   0, 15, 80; % Youtube watch: x-y min
+%                         1.0,   0, 15,  80,  0,  0; % Youtube up: x-y min
+%                           0,0.16,  0,   0,  3, 12; % Spotify: x-y min
+%                         0.5,   0,  3,  20,  0,  0; % Upload file: x-y min
+%                       ];
         appType = 6;
     end
     

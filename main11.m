@@ -2,7 +2,8 @@
 clear; clc;
 
 % simulation parameters
-% nsims = 50; %100;        
+% nsims = 50; %100;
+nsims = 1;
 time_in_minute = 5;
 sim_time = time_in_minute * 60 * 1000;    % time in ms
 % sim_time = time_in_minute * 10;    % time in ms
@@ -11,8 +12,12 @@ sim_time = time_in_minute * 60 * 1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
-min_lambda = 2*60*1000 ;   % every half minute user enter cell      
-max_lambda = 4*60*1000;     % every 1 minutes user enter cell
+% min_lambda = 0.5*60*1000 ;   % every half minute user enter cell      
+% max_lambda = 1*60*1000;     % every 2 minutes user enter cell
+min_lambda = 0.5*60*1000 ;   % every half minute user enter cell      
+max_lambda = 2*60*1000;     % every 1 minutes user enter cell
+
+num_Alg = 6;
 
 % generate cells 
 cells = DataGenerator.generatePoissonCells(N, sim_time, min_lambda, max_lambda, M);
@@ -26,29 +31,46 @@ end
 % TODO: cluster need to set rate and demand for each cell
 % NOTE: we can set data rate here because they don't change
 % however, demand is set in the for loop below
-cluster = Cells(N,M);
-%cluster.CellMatrix
-% cluster.setDataRate(repmat([50 100],N, 1));  % For now, all cells have same rate
+clusterSet = Cells.empty(num_Alg,0);
+clusterSet(1) = Cells(N,M);
+clusterSet(1).setDataRate(repmat([5 20],N, 1));  % For now, all cells have same rate
                                              % rates measured in Mbps
-cluster.setDataRate(repmat([2 20],N, 1));  % For now, all cells have same rate
-                                             % rates measured in Mbps                                             
+for i=2:num_Alg
+    clusterSet(i) = copy(clusterSet(1));
+end
 
 % setup schedulers
-alg1 = GreedyAlg;           
-% alg2 = Baseline55;
-% mu2 = 5;
-% md2 = 5;
-% k = 2;
-scheduler1 = SingleFrameScheduler(M);
-scheduler1.setSchedulingAlg(alg1);
-%scheduler1.setUtilityFunction(@UtilityFunctions.dataRateBase);
-scheduler1.setUtilityFunction(@UtilityFunctions.expQueueLength);
+alg1 = GreedyAlg;       
+alg2 = Baseline55;
+alg3 = Baseline46;
+alg4 = Baseline37;
+alg5 = Baseline28;
+alg6 = Baseline19;
+
+schedulers = SingleFrameScheduler.empty(num_Alg,0);
+for i=1:num_Alg
+    schedulers(i) = SingleFrameScheduler(M);
+    schedulers(i).setUtilityFunction(@UtilityFunctions.dataRateBase);
+    %scheduler1.setUtilityFunction(@UtilityFunctions.expQueueLength);
+end
+schedulers(1).setSchedulingAlg(alg1);
+schedulers(2).setSchedulingAlg(alg2);
+schedulers(3).setSchedulingAlg(alg3);
+schedulers(4).setSchedulingAlg(alg4);
+schedulers(5).setSchedulingAlg(alg5);
+schedulers(6).setSchedulingAlg(alg6);
+
+% stat
+stats = Statistic.empty(num_Alg,0);
+for i=1:num_Alg
+    stats(i) = Statistic(nsims, sim_time/tau);
+end
+
 
 % disp('Before updating statistic');
 % cluster.CellMatrix
-stats = Statistic(1, sim_time/tau);
-amount_scheduled = zeros(sim_time/tau,2);
-amount_transmitted = zeros(sim_time/tau,2);
+% stats = Statistic(1, sim_time/tau);
+% amount_transmitted = zeros(sim_time/tau,2);
 % disp('After updating statistic');
 % cluster.CellMatrix
 t = 1;
@@ -62,28 +84,28 @@ while t < sim_time
     % collect data demand 
     for cell = cells
         [ul, dl] = cell.getDemandBySubframe();
-        %fprintf('Demand %d:%d\n',ul, dl);
-        cluster.setDemandByCell(cell.getId(), ul, dl);    % update the CellMatrix in Cells
+        for cluster = clusterSet
+            cluster.setDemandByCell(cell.getId(), ul, dl);    % update the CellMatrix in Cells
+        end
     end
-    %cluster.CellMatrix(:,3:4)'
-%     disp('Before schedule');
-%     cluster.CellMatrix
+    
     % schedule
-    [mu, md] = scheduler1.configure(cluster);
-%     fprintf('Scheduling mu=%d, md=%d\n',mu,md);
-    cluster.transmit(mu, md);
-    amount_scheduled(idx,:) = [mu, md];
+    for i = 1:num_Alg
+        [mu, md] = schedulers(i).configure(clusterSet(i));
+        clusterSet(i).transmit(mu, md);
+        stats(i).update(1, idx, clusterSet(i));
+    end
 % update with cell how much has been transmitted    
 %     for cell = cells
 %         cell.updateDemand((cluster.getCellRate(cell.getId()) .* [mu, md]) / 1000);
 %     end
-    amount_transmitted(idx,:) = [mu, md];  % for testing
+%    amount_transmitted(idx,:) = [mu, md];  % for testing
 %     fprintf('Transmit %d:%d\n',mu,md);
 %     fprintf('After transmit %d:%d\n',mu,md);
 %     cluster.CellMatrix
     
     % store data for statistic
-    stats.update(1, idx, cluster);
+    
     %disp('After update stats');
     %cluster.CellMatrix
     %stats.StatsMatrix
