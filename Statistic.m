@@ -42,19 +42,13 @@ classdef Statistic < handle
             %update add new statistics to StatsMatrix
             totalThroughputs = cells.getTotalThroughput();  % includes ul and dl
             validateattributes(totalThroughputs,{'numeric'},{'size',[1,2]});
-            % obj.StatsMatrix(sim_idx,idx,obj.TT) = sum(totalThroughputs);
             obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughputs);
-%            fprintf('id=%d,sim_idx=%d,Gain: %f\n',idx,sim_idx,sum(totalThroughputs));
             
-            %avgThroughputs = cells.getAvgThroughput();
-            %obj.StatsMatrix(sim_idx,idx,obj.AUT:obj.ADT) = mean(avgThroughputs,1);
-            %obj.StatsMatrix(idx,obj.AUT:obj.ADT,sim_idx) = mean(avgThroughputs,1);
             obj.StatsMatrix(idx,obj.AUT:obj.ADT,sim_idx) = totalThroughputs;
             
             [minU, maxU, avgU, stdU] = cells.queueStats(Direction.Uplink);
             [minD, maxD, avgD, stdD] = cells.queueStats(Direction.Downlink);
-            %obj.StatsMatrix(sim_idx,idx,obj.MinUQ:obj.StdUQ) = [minU, maxU, avgU, stdU];
-            %obj.StatsMatrix(sim_idx,idx,obj.MinDQ:obj.StdDQ) = [minD, maxD, avgD, stdD];
+            
             obj.StatsMatrix(idx,obj.MinUQ:obj.StdUQ,sim_idx) = [minU, maxU, avgU, stdU];
             obj.StatsMatrix(idx,obj.MinDQ:obj.StdDQ,sim_idx) = [minD, maxD, avgD, stdD];
             

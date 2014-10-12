@@ -120,7 +120,7 @@ classdef Cells < matlab.mixin.Copyable
 
         function realQL = getRealQueueLength(obj) 
             % measured in Mb
-            realQL = (obj.CellMatrix(:,obj.UR:obj.DR) .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;
+            realQL = obj.CellMatrix(:,obj.UR:obj.DR) .* obj.CellMatrix(:,obj.ULDR:obj.DLDR);
             validateattributes(realQL,{'numeric'},{'size',[obj.N,2]});
         end
         
