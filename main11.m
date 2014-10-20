@@ -1,21 +1,15 @@
-% throughput gain vs. number of times cells change their demand
+% our algorithm against all the baselines
 clear; clc;
 
 % simulation parameters
-% nsims = 50; %100;
 nsims = 1;
-time_in_minute = 5;
+time_in_minute = 3;
 sim_time = time_in_minute * 60 * 1000;    % time in ms
-% sim_time = time_in_minute * 10;    % time in ms
-% time_in_minute = 5;
-% sim_time = time_in_minute * 60 *1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
-% min_lambda = 0.5*60*1000 ;   % every half minute user enter cell      
-% max_lambda = 1*60*1000;     % every 2 minutes user enter cell
 min_lambda = 0.5*60*1000 ;   % every half minute user enter cell      
-max_lambda = 2*60*1000;     % every 1 minutes user enter cell
+max_lambda = 1*60*1000;     % every 1 minutes user enter cell
 
 num_Alg = 6;
 
@@ -28,7 +22,6 @@ for i = 1:N
 end
 
 % generate cluster
-% TODO: cluster need to set rate and demand for each cell
 % NOTE: we can set data rate here because they don't change
 % however, demand is set in the for loop below
 clusterSet = Cells.empty(num_Alg,0);
@@ -65,7 +58,6 @@ stats = Statistic.empty(num_Alg,0);
 for i=1:num_Alg
     stats(i) = Statistic(nsims, sim_time/tau);
 end
-
 
 % disp('Before updating statistic');
 % cluster.CellMatrix

@@ -20,13 +20,13 @@ classdef DataGenerator
 %                       ];
 
 % The demand is measured in Mb
-        appCategory = [ 0.3, 0.3, 36,  90, 36, 90; % Skype: 2-5 minutes
-                          0, 0.2,  0,   0, 12, 60; % Web browsing: 1-5 min
-                          0, 1.0,  0,   0, 60,300; % Youtube watch: 1-5 min
-                        1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
-                          0,0.16,  0,   0, 10, 48; % Spotify: 1-5 min
-                        0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
-                      ];
+%         appCategory = [ 0.3, 0.3, 36,  90, 36, 90; % Skype: 2-5 minutes
+%                           0, 0.2,  0,   0, 12, 60; % Web browsing: 1-5 min
+%                           0, 1.0,  0,   0, 60,300; % Youtube watch: 1-5 min
+%                         1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
+%                           0,0.16,  0,   0, 10, 48; % Spotify: 1-5 min
+%                         0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+%                       ];
 
 %         appCategory = [ 0.3, 0.3, 18,  25, 18, 25; % Skype: 0.5-0.x minutes
 %                           0, 0.2,  0,   0,  3, 15; % Web browsing: x-y min
@@ -35,7 +35,23 @@ classdef DataGenerator
 %                           0,0.16,  0,   0,  3, 12; % Spotify: x-y min
 %                         0.5,   0,  3,  20,  0,  0; % Upload file: x-y min
 %                       ];
-        appType = 6;
+
+% Remove Spotify rom the list        
+%         appCategory = [ 0.3, 0.3, 36,  90, 36, 90; % Skype: 2-5 minutes
+%                           0, 0.2,  0,   0, 12, 60; % Web browsing: 1-5 min
+%                           0, 1.0,  0,   0, 60,300; % Youtube watch: 1-5 min
+%                         1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
+%                         0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+%                       ];
+%         appType = 5;
+
+% Heavy uplink 
+        appCategory = [ 0.3, 0.3, 36,  90, 36, 90;
+                          0, 1.0,  0,   0, 60,300;
+                        1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
+                        0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+                      ];
+        appType = 4;
     end
     
     methods (Static)
@@ -45,50 +61,6 @@ classdef DataGenerator
             
             % dataRate = randi([DataGenerator.minRate, DataGenerator.maxRate],N,1);
             dataRate = randi([DataGenerator.minRate, DataGenerator.maxRate],N,2);
-        end
-        
-%         function uplinks = generateUplinkDemand(N)
-%             uplinks = randi([DataGenerator.minUL,DataGenerator.maxUL],N,1);
-%         end
-
-        function demand = generateRandomDemand(N,M)
-            u = randi([0 M],N, 1);
-            d = repmat(M,N,1) - u;
-            demand = [min(u,d), max(u,d)];
-        end
-
-        function demand = generateLinkDemand(N,M)
-            %generateLinkDemand generates N pairs of integers whose sum <=
-            %  M
-            
-            tot_sum = randi(M + 1, [N,1]) - 1;
-            result = rand(N, 2);
-            result = bsxfun(@rdivide, result, sum(result,2));
-            demand = round(bsxfun(@times, result, tot_sum));
-            demand = [min(demand,[],2), max(demand,[],2)];
-        end
-        
-        function extremeRate = generateExtremeDemand(N,M)
-%             extremeRate = zeros(N,2);
-%             mid = floor(N/2);
-%             extremeRate(1:mid,:) = repmat([1 9],mid,1);
-%             extremeRate(mid+1:N,:) = repmat([9 1],N-mid,1);
-              extremeRate = repmat([1 9],N,1);
-        end
-        
-        function standard = generateLTEStandardDemand(N,M)
-            fixture = [4 6;3 7;1 9;2 8;5 5];
-            standard = zeros(N,2);
-            for i = 1:N
-                standard(i,:) = fixture(randi([1 5]));
-            end
-        end
-        
-        function standard = generateExtremeLTEStandardDemand(N,n_frames)
-            fixture = [4 6 3 7 1 9 2 8 5 5];
-            fixture = repmat(fixture,n_frames,2);
-            fixture = repmat(fixture,N,1);
-            standard = fixture(1:N,1:2*n_frames);
         end
         
         function [ulRate, dlRate, ulSize, dlSize] = randomApp()
@@ -108,7 +80,8 @@ classdef DataGenerator
         function cells = generatePoissonCells(N, sim_time, min_lambda, max_lambda, M)
             cells = CellPoisson.empty(N, 0);
             for i = 1:N
-                cells(i) = CellPoisson(i, randi([4 10]), randi([min_lambda, max_lambda]), sim_time, M);
+                %cells(i) = CellPoisson(i, randi([10 20]), randi([min_lambda, max_lambda]), sim_time, M);
+                cells(i) = CellPoisson(i, randi([10 20]), randi([min_lambda, max_lambda]), sim_time, M);
             end
         end
     end

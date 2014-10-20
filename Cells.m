@@ -9,6 +9,7 @@ classdef Cells < matlab.mixin.Copyable
         N;          % number of cells
         Throughput; % Nx2 matrix - cummulative throughput
         counter = 0; % number of time frames since existence 
+        currentThroughput = 0;
     end
     
     properties (Constant)
@@ -95,6 +96,7 @@ classdef Cells < matlab.mixin.Copyable
         
         function totalThrouhghput = getTotalThroughput(obj)
             %getTotalThroughput returns 1x2 matrix of total ul/dl throughput
+            % sums up the throughput over all the cells
             
             totalThrouhghput = sum(obj.Throughput,1);
             validateattributes(totalThrouhghput,{'numeric'},{'size',[1,2]});
@@ -107,16 +109,16 @@ classdef Cells < matlab.mixin.Copyable
             validateattributes(queueLength,{'numeric'},{'size',[obj.N,2]});
         end
         
+        function queueLength = getTotalQueueLength(obj)
+            %returns Nx1 vector of total queue length
+            tmp = obj.CellMatrix(:,obj.UR:obj.DR);
+            queueLength = sum(tmp, 2);
+        end
+        
         function demand = getDemand(obj)
             demand = obj.CellMatrix(:,obj.UL:obj.DL);
             validateattributes(demand,{'numeric'},{'size',[obj.N,2]});
         end
-        
-%         function realQL = getRealQueueLength(obj) 
-%             % measured in Mb
-%             realQL = obj.CellMatrix(:,obj.ULQL:obj.DLQL);
-%             validateattributes(realQL,{'numeric'},{'size',[obj.N,2]});
-%         end
 
         function realQL = getRealQueueLength(obj) 
             % measured in Mb
@@ -127,6 +129,15 @@ classdef Cells < matlab.mixin.Copyable
         function cellRates = getCellRate(obj, id) 
             cellRates = obj.CellMatrix(id, obj.ULDR:obj.DLDR);
         end
+       
+        function maxQL = getMaxQueueLengths(obj)
+            realQL = obj.getRealQueueLength();
+            maxQL = max(realQL, [], 1);
+        end
+        
+        function throughput = getCurrentThroughput(obj)
+            throughput = obj.currentThroughput;
+        end
         
         %% Utility functions
         function transmitted = transmit(obj, uplink, downlink)
@@ -134,34 +145,20 @@ classdef Cells < matlab.mixin.Copyable
             %  uplink and downlink are calculated by scheduling algorithm
             %  all cells are configured with the same number of UL and DL
             %  actual is a 1x2 vector
-%            fprintf('Trying to transmit %d ul, %d dl\n',uplink,downlink);           
             actual_sf = min(repmat([uplink downlink],obj.N,1), ...
                              obj.CellMatrix(:,obj.UL:obj.DL));
             
-%             disp('Actual transmit');
-%             actual_sf
             % actual data transmitted
             % transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
+            obj.currentThroughput = sum(transmitted(:));
             
             % update remaining subframes
             obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
-            
-            % update queue length
-            % NOTE: we might want to divide by M but it will the values
-            % small, not clear when visualize
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) ...
-                   + (obj.CellMatrix(:,obj.UR:obj.DR)...
-                   .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;
-            
-%             disp('Transmitted: ');
-%             actual
-%             
+              
             % update throughput
             % NOTE: This is accumulate throughput up until current point
             obj.Throughput = obj.Throughput + transmitted;
-%             disp('Throughput ');
-%             obj.Throughput
             
             % update counter
             obj.counter = obj.counter + 1;
@@ -171,20 +168,12 @@ classdef Cells < matlab.mixin.Copyable
             %queueStats computes statistics for queue lengths
             switch direction
                 case Direction.Uplink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.ULQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.UR).* obj.CellMatrix(:,obj.ULDR));
                 case Direction.Downlink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DLQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DR).* obj.CellMatrix(:,obj.DLDR));
             end
         end
-        
-        function updateQueueLength(obj) 
-            %updateQueueLength updates queue length every time demand
-            %  changes
-            %  queue_length = data_rate * demand
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = ...
-                        ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M )...
-                       .* obj.CellMatrix(:,obj.ULDR:obj.DLDR) ;
-        end
+
     end
     
     methods (Static)

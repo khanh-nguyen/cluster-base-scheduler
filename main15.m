@@ -1,9 +1,11 @@
+% our algorithm against all the baselines
+% INCREASE run time
+% Get throughput per frame instead of summing up throuhgput
 clear; clc;
 
 % simulation parameters
-% nsims = 50; %100;
 nsims = 1;
-time_in_minute = 5;
+time_in_minute = 10;
 sim_time = time_in_minute * 60 * 1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
@@ -11,7 +13,7 @@ tau = 10;           % length of one time frame (10ms)
 min_lambda = 0.5*60*1000 ;   % every half minute user enter cell      
 max_lambda = 1*60*1000;     % every 1 minutes user enter cell
 
-num_Alg = 2;
+num_Alg = 6;
 
 % generate cells 
 cells = DataGenerator.generatePoissonCells(N, sim_time, min_lambda, max_lambda, M);
@@ -22,7 +24,6 @@ for i = 1:N
 end
 
 % generate cluster
-% TODO: cluster need to set rate and demand for each cell
 % NOTE: we can set data rate here because they don't change
 % however, demand is set in the for loop below
 clusterSet = Cells.empty(num_Alg,0);
@@ -35,15 +36,24 @@ end
 
 % setup schedulers
 alg1 = GreedyAlg;       
+alg2 = Baseline55;
+alg3 = Baseline46;
+alg4 = Baseline37;
+alg5 = Baseline28;
+alg6 = Baseline19;
 
 schedulers = SingleFrameScheduler.empty(num_Alg,0);
 for i=1:num_Alg
     schedulers(i) = SingleFrameScheduler(M);
-    schedulers(i).setSchedulingAlg(alg1);
+    schedulers(i).setUtilityFunction(@UtilityFunctions.dataRateBase);
+    %scheduler1.setUtilityFunction(@UtilityFunctions.expQueueLength);
 end
-
-schedulers(1).setUtilityFunction(@UtilityFunctions.dataRateBase);
-schedulers(2).setUtilityFunction(@UtilityFunctions.maxQueueLength);
+schedulers(1).setSchedulingAlg(alg1);
+schedulers(2).setSchedulingAlg(alg2);
+schedulers(3).setSchedulingAlg(alg3);
+schedulers(4).setSchedulingAlg(alg4);
+schedulers(5).setSchedulingAlg(alg5);
+schedulers(6).setSchedulingAlg(alg6);
 
 % stat
 stats = Statistic.empty(num_Alg,0);
@@ -51,7 +61,6 @@ for i=1:num_Alg
     stats(i) = Statistic(nsims, sim_time/tau);
 end
 
-actualTransmit = zeros(sim_time/tau,2,num_Alg);
 t = 1;
 idx = 1;
 while t < sim_time
@@ -61,26 +70,23 @@ while t < sim_time
     end
     
     % collect data demand 
-    %disp('CEll DEMAND');
     for cell = cells
         [ul, dl] = cell.getDemandBySubframe();
-        %fprintf('%d:%d\n',ul,dl);
         for cluster = clusterSet
             cluster.setDemandByCell(cell.getId(), ul, dl);    % update the CellMatrix in Cells
         end
     end
     
-    
     % schedule
-    %disp('Cluster TRANSMIT');
     for i = 1:num_Alg
         [mu, md] = schedulers(i).configure(clusterSet(i));
-        %fprintf('Alg %d transmit %d:%d\n',i,mu,md);
-        clusterSet(i).transmit(mu, md);        
+        clusterSet(i).transmit(mu, md);
         stats(i).update(1, idx, clusterSet(i));
-        actualTransmit(idx,:,i) = [mu, md];
     end
-    
+
+    %stats.StatsMatrix
     t = t + tau;
     idx = idx + 1;
+    %fprintf('Moving to iteration %d\n',idx);
+    %cluster.CellMatrix
 end

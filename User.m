@@ -30,12 +30,12 @@ classdef User < handle
             % infinitely. We don't care if data is really transmitted. It
             % will be accumulated at cell's queue if it's not transmitted
             if obj.ULDemand > 0
-                frame_limit = obj.ULRate / 100; % rate measured in Mbps,
-                                                % rate / 100 = Mb/frame
-                ul = min(obj.ULDemand, frame_limit);
-                obj.ULDemand = obj.ULDemand - ul;
+               frame_limit = obj.ULRate / 100; % rate measured in Mbps,
+                                               % rate / 100 = Mb/frame
+               ul = min(obj.ULDemand, frame_limit);
+               obj.ULDemand = obj.ULDemand - ul;
             else
-                ul = 0;
+               ul = 0;
             end
             
             if obj.DLDemand > 0
@@ -46,6 +46,9 @@ classdef User < handle
             else
                 dl = 0;
             end
+            % user generate data infinitely
+            ul = obj.ULRate / 100;
+            dl = obj.DLRate / 100;
         end
     end
     

@@ -84,9 +84,9 @@ classdef CellPoisson < handle
                 %dlsf = floor((dl * obj.M) / (ul + dl));
                 ulsf = ceil(subframe_count(1));
                 dlsf = ceil(subframe_count(2));
-                if ulsf + dlsf > obj.M
-                    ulsf = obj.M - dlsf;
-                end
+                %if ulsf + dlsf > obj.M
+                %    ulsf = obj.M - dlsf;
+                %end
             end
         end
         

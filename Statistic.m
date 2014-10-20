@@ -14,7 +14,7 @@ classdef Statistic < handle
     
     properties (Constant)
         %%Constatnt properties give names to columns
-        NC = 12;    % number of columns
+        NC = 14;    % number of columns
         TT = 1;     % index of Total Throughput column
         AUT = 2;    % index of Average UL Throughput column
         ADT = 3;    % index of Average DL Throughput column
@@ -27,6 +27,8 @@ classdef Statistic < handle
         AvgDQ = 10;  % index of Average DL Queue length column
         StdDQ = 11;  % index of Standard deviation of DL Queue length column
         SumQL = 12; % sum of the length of UL and DL queues
+        MaxQL = 13; % longest queue length
+        CurrentTT = 14;
     end
     
     methods
@@ -44,6 +46,13 @@ classdef Statistic < handle
             validateattributes(totalThroughputs,{'numeric'},{'size',[1,2]});
             obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughputs);
             
+            realQL = cells.getRealQueueLength();
+            obj.StatsMatrix(idx,obj.SumQL,sim_idx) = sum(sum(realQL,1));
+            
+            % get the longest queue
+            obj.StatsMatrix(idx, obj.MaxQL, sim_idx) = max(sum(realQL, 2));
+            
+            % following columns can be ignored
             obj.StatsMatrix(idx,obj.AUT:obj.ADT,sim_idx) = totalThroughputs;
             
             [minU, maxU, avgU, stdU] = cells.queueStats(Direction.Uplink);
@@ -52,8 +61,7 @@ classdef Statistic < handle
             obj.StatsMatrix(idx,obj.MinUQ:obj.StdUQ,sim_idx) = [minU, maxU, avgU, stdU];
             obj.StatsMatrix(idx,obj.MinDQ:obj.StdDQ,sim_idx) = [minD, maxD, avgD, stdD];
             
-            realQL = cells.getRealQueueLength();
-            obj.StatsMatrix(idx,obj.SumQL,sim_idx) = sum(sum(realQL,1));
+            obj.StatsMatrix(idx, obj.CurrentTT, sim_idx) = cells.getCurrentThroughput();
         end
         
         %%Getters
@@ -63,20 +71,6 @@ classdef Statistic < handle
             avgTotalThroughput = mean(obj.StatsMatrix(:,obj.TT,:),3);
             validateattributes(avgTotalThroughput,{'numeric'},...
                                {'size',[size(obj.StatsMatrix,1),1]});
-        end
-        
-        function [avgULThroughput, avgDLThroughput] = getAvgLinkThroughput(obj)
-            %getAvgLinkThroughput returns avg U:/DL throughput per time
-            %  frame
-            avgULThroughput = mean(obj.StatsMatrix(:,obj.AUT,:),3);    
-            avgDLThroughput = mean(obj.StatsMatrix(:,obj.ADT,:),3);
-        end
-        
-        function [minULQueue, minDLQueue] = getAvgMinQueueLength(obj)
-            %getMinQueueLength returns the avg min UL/DL queue length per frame
-
-            minULQueue = mean(obj.StatsMatrix(:,obj.MinUQ,:),3);
-            minDLQueue = mean(obj.StatsMatrix(:,obj.MinDQ,:),3);
         end
         
         function [maxULQueue, maxDLQueue] = getAvgMaxQueueLength(obj)
@@ -92,15 +86,20 @@ classdef Statistic < handle
             avgDLQueue = mean(obj.StatsMatrix(:,obj.AvgDQ,:),3);
         end
         
-        function [stdULQueue, stdDLQueue] = getStdQueueLength(obj)
-            %getStdQueueLength returns the avg std of UL/DL queue length per frame
-            
-            stdULQueue = mean(obj.StatsMatrix(:,obj.StdUQ,:),3);
-            stdDLQueue = mean(obj.StatsMatrix(:,obj.StdDQ,:),3);
-        end
-        
         function totalQL = getTotalQueueLength(obj) 
             totalQL = mean(obj.StatsMatrix(:,obj.SumQL,:),3);
+        end
+        
+        function maxQL = getMaxQueueLength(obj)
+            maxQL = obj.StatsMatrix(:, obj.MaxQL);
+        end
+        
+        function finalQueueLength = getFinalQueueLength(obj)
+            finalQueueLength = obj.StatsMatrix(end, obj.SumQL);
+        end
+        
+        function throughput = getCurrentThroughput(obj)
+            throughput = obj.StatsMatrix(:, obj.CurrentTT);
         end
     end
 end
