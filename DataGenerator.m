@@ -55,17 +55,11 @@ classdef DataGenerator
     end
     
     methods (Static)
-        function dataRate = generateDataRate(N)
-            %generateDataRate generates data rate for N cells
-            %  returns Nx2 matrix
-            
-            % dataRate = randi([DataGenerator.minRate, DataGenerator.maxRate],N,1);
-            dataRate = randi([DataGenerator.minRate, DataGenerator.maxRate],N,2);
-        end
-        
         function [ulRate, dlRate, ulSize, dlSize] = randomApp()
+            % generate a random application
             category = randi([1, DataGenerator.appType]);
             app = DataGenerator.appCategory(category, :);
+            
             ulRate = app(1);
             dlRate = app(2);
             ulSize = randi([app(3), app(4)]);
@@ -73,15 +67,26 @@ classdef DataGenerator
         end
         
         function user = generateUser()
+            % each user is assigned a random app
             [ulRate, dlRate, ulSize, dlSize] = DataGenerator.randomApp();
             user = User(ulRate, dlRate, ulSize, dlSize);
         end
         
-        function cells = generatePoissonCells(N, sim_time, min_lambda, max_lambda, M)
-            cells = CellPoisson.empty(N, 0);
+        function cluster = generatePoissonCells(N, sim_time, min_lambda, max_lambda, M)
+            % generate a cluster, i.e. a group of N cells
+            cluster = CellPoisson.empty(N, 0);
             for i = 1:N
-                %cells(i) = CellPoisson(i, randi([10 20]), randi([min_lambda, max_lambda]), sim_time, M);
-                cells(i) = CellPoisson(i, randi([10 20]), randi([min_lambda, max_lambda]), sim_time, M);
+                lambda = (max_lambda - min_lambda)*rand() + min_lambda;
+                cluster(i) = CellPoisson(i, randi([10 20]), lambda, sim_time, M);
+            end
+        end
+        
+        function cluster = generatePoissonCellsWithFixedPar(N, sim_time, init_users, lambda, M)
+            % generate a cluster, i.e. a group of N cells
+            % number of initial users and lambda are given as input
+            cluster = CellPoisson.empty(N, 0);
+            for i = 1:N
+                cluster(i) = CellPoisson(i, init_users, lambda, sim_time, M);
             end
         end
     end

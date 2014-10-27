@@ -1,10 +1,10 @@
 % Create CDF for throughput and queue length
-% Throughput is throughput per frame and not accumulative
+% Longer run time (5mins for each iteration)
 clear; clc;
 
 % simulation parameters
 nsims = 1;
-time_in_minute = 2;
+time_in_minute = 5;
 sim_time = time_in_minute * 60 * 1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
@@ -14,7 +14,7 @@ min_lambda = 1/(1*60*1000);     % every 1 minutes user enter cell
 
 num_Alg = 6;
 
-totalRun = 1;
+totalRun = 100;
 FinalResultThroughput = zeros(totalRun, num_Alg);
 FinalResultQueueLength = zeros(totalRun, num_Alg);
 
@@ -89,8 +89,6 @@ for sim = 1:totalRun
     
     
     for i=1:num_Alg
-        %tmpTT = stats(i).getAvgTotalThroughput();
-        %tmpQL = stats(i).getTotalQueueLength();
         tmpTT = stats(i).getAvgTotalThroughput();
         FinalResultThroughput(sim, i) = mean(tmpTT);
         FinalResultQueueLength(sim, i) = stats(i).getFinalQueueLength();

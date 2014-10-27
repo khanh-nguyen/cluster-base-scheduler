@@ -7,9 +7,8 @@ classdef Cells < matlab.mixin.Copyable
                     
         M;          % number of subframes in a frame
         N;          % number of cells
-        Throughput; % Nx2 matrix - cummulative throughput
-        counter = 0; % number of time frames since existence 
         currentThroughput = 0;
+        cellThroughput; % Nx2 matrix - cell throughput at each frame
     end
     
     properties (Constant)
@@ -31,7 +30,6 @@ classdef Cells < matlab.mixin.Copyable
             
             obj.CellMatrix = zeros(N,obj.NC);
             obj.M = M;
-            obj.Throughput = zeros(N,2);
             obj.N = N;
         end
         
@@ -49,7 +47,7 @@ classdef Cells < matlab.mixin.Copyable
         
         function setDemand(obj, demands)
             %setUplinkDemand sets the number of uplinks and downlinks 
-            %  demanded for each cell
+            %  demanded for each cell, measured in #subframes
             %  uplinks - column vector represents number of uplink demanded
             %  downlinks - column vector rep. number of downlink demanded
             
@@ -60,22 +58,12 @@ classdef Cells < matlab.mixin.Copyable
             % number of demanded UL/DL: demand + remain
             obj.CellMatrix(:,obj.UL:obj.DL) = demands ...
                                          + obj.CellMatrix(:,obj.UR:obj.DR);
-            
-            % calculate queue length
-            % queue length is considered what left after each transmit
-            % Hence, no updating uqueue length here
-            % obj.updateQueueLength();
         end
-        
-%         function setDemandByCell(obj, id, ul, dl)
-%             % ul, dl is measured in Kb, needs to be converted to subframes
-%             demands = [ul, dl] ./ obj.CellMatrix(id,obj.ULDR:obj.DLDR);
-%             obj.CellMatrix(id,obj.UL:obj.DL) = demands + obj.CellMatrix(id,obj.UR:obj.DR);
-%         end
         
         function setDemandByCell(obj, id, ul, dl)
             obj.CellMatrix(id, obj.UL:obj.DL) = [ul, dl] + obj.CellMatrix(id,obj.UR:obj.DR);
         end
+        
         
         %% Getters
         function dataRates = getDataRate(obj)
@@ -83,22 +71,12 @@ classdef Cells < matlab.mixin.Copyable
             validateattributes(dataRates,{'numeric'},{'size',[obj.N,2]});
         end
         
-        function avgThroughput = getAvgThroughput(obj)
-            %getAvgThrouhgput returns average [uT,dT] until this moment
-            
-            if (obj.counter == 0) 
-               avgThroughput = repmat([0 0], obj.N, 1);
-            else     
-               avgThroughput = obj.Throughput / obj.counter;
-            end
-            validateattributes(avgThroughput,{'numeric'},{'size',[obj.N,2]});
-        end
-        
+        % FIXME: this needs to be changed
+        % obj.Throughput has been removed
         function totalThrouhghput = getTotalThroughput(obj)
             %getTotalThroughput returns 1x2 matrix of total ul/dl throughput
             % sums up the throughput over all the cells
-            
-            totalThrouhghput = sum(obj.Throughput,1);
+            totalThrouhghput = sum(obj.cellThroughput,1);
             validateattributes(totalThrouhghput,{'numeric'},{'size',[1,2]});
         end
         
@@ -113,6 +91,7 @@ classdef Cells < matlab.mixin.Copyable
             %returns Nx1 vector of total queue length
             tmp = obj.CellMatrix(:,obj.UR:obj.DR);
             queueLength = sum(tmp, 2);
+            validateattributes(queueLength,{'numeric'},{'size',[obj.N,1]});
         end
         
         function demand = getDemand(obj)
@@ -131,15 +110,20 @@ classdef Cells < matlab.mixin.Copyable
         end
        
         function maxQL = getMaxQueueLengths(obj)
+            % get the maximum ul/dl queue length for all cells
             realQL = obj.getRealQueueLength();
             maxQL = max(realQL, [], 1);
+            validateattributes(maxQL,{'numeric'},{'size',[1,2]});
         end
         
+        % FIXME: do we still need this function?
         function throughput = getCurrentThroughput(obj)
             throughput = obj.currentThroughput;
         end
         
         %% Utility functions
+        % UPDATE: added obj.celThroughput, removed obj.currentThroughput,
+        % removed obj.Throughput, removed obj.counter
         function transmitted = transmit(obj, uplink, downlink)
             %transmit sends data upward and downward
             %  uplink and downlink are calculated by scheduling algorithm
@@ -149,28 +133,22 @@ classdef Cells < matlab.mixin.Copyable
                              obj.CellMatrix(:,obj.UL:obj.DL));
             
             % actual data transmitted
-            % transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
-            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
-            obj.currentThroughput = sum(transmitted(:));
+            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;    %Mb
+            % obj.currentThroughput = sum(transmitted(:));
+            obj.cellThroughput = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             
             % update remaining subframes
             obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
-              
-            % update throughput
-            % NOTE: This is accumulate throughput up until current point
-            obj.Throughput = obj.Throughput + transmitted;
-            
-            % update counter
-            obj.counter = obj.counter + 1;
         end
                 
         function [minL, maxL, avgL, stdL] = queueStats(obj, direction) 
-            %queueStats computes statistics for queue lengths
+            %queueStats computes statistics for queue lengths, measured in
+            % Mb
             switch direction
                 case Direction.Uplink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.UR).* obj.CellMatrix(:,obj.ULDR));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.UR).* obj.CellMatrix(:,obj.ULDR))/1000);
                 case Direction.Downlink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DR).* obj.CellMatrix(:,obj.DLDR));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.DR).* obj.CellMatrix(:,obj.DLDR))/1000);
             end
         end
 
