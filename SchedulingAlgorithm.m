@@ -1,11 +1,16 @@
 classdef SchedulingAlgorithm 
+    %SchedulingAlgorithm interface for all scheduling algorithms.
+    
     methods (Abstract)
         schedule(obj, uplinks, downlinks, uProfit, dProfit, m)
-        %% @arg uplinks: an array of uplink requirements
-        %% @arg downlinks: an array of downlink requirements
-        %% @arg uProfit: array of profit, achieving for each scheduled uplink
-        %% @arg m: number of subframes
-        %% @arg dProfit: array of profit, achieving for each scheduled downlink
-        %% @return number of uplinks and downlinks configured for cluster  
+        %scheudule compute the optimal number of uplink and downlink
+        %  subframes for a cluster
+        %
+        %  uplinks: an array of uplink requirements
+        %  downlinks: an array of downlink requirements
+        %  uProfit: array of profit, achieving for each scheduled uplink
+        %  m: number of subframes
+        %  dProfit: array of profit, achieving for each scheduled downlink
+        %  return number of uplinks and downlinks configured for cluster  
     end
 end
