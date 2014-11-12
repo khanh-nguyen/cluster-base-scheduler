@@ -1,119 +1,92 @@
+% Create CDF for throughput and queue length
+% Longer run time (5mins for each iteration)
 clear; clc;
 
 % simulation parameters
-nsims = 10; %100;        
-sim_time = 100;    % sim_time / tau = number of frames
+nsims = 1;
+time_in_minute = 5;
+sim_time = time_in_minute * 60 * 1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
+max_lambda = 1/(0.5*60*1000) ;   % 1 person every every half minute user enter cell      
+min_lambda = 1/(1*60*1000);     % every 1 minutes user enter cell
 
-alg = GreedyAlg;           % setting scheduling algorithm
-alg2 = Baseline55;
-alg3 = Baseline46;
-alg4 = Baseline37;
-alg5 = Baseline28;
-alg6 = Baseline19;
+num_Alg = 3;
 
-% The datarate base scheduler
-s1 = SingleFrameScheduler(M);   % scheduler needs to know the number of cells
-s1.setSchedulingAlg(alg);
-s1.setUtilityFunction(@UtilityFunctions.dataRateBase);
+numDemandUL = 0; numDemandDL = 0;
+numScheduledUL = zeros(num_Alg, 1);
+numScheduledDL = zeros(num_Alg, 1);
 
-% Scheduler that considers queue length
-s2 = SingleFrameScheduler(M);
-s2.setSchedulingAlg(alg2);
-s2.setUtilityFunction(@UtilityFunctions.expQueueLength);
+FinalResultThroughput = zeros(sim_time / tau, num_Alg);
 
-s3 = SingleFrameScheduler(M);
-s3.setSchedulingAlg(alg3);
-s3.setUtilityFunction(@UtilityFunctions.expQueueLength);
+% generate cells 
+cells = DataGenerator.generatePoissonCells(N, sim_time, min_lambda, max_lambda, M);
 
-s4 = SingleFrameScheduler(M);
-s4.setSchedulingAlg(alg4);
-s4.setUtilityFunction(@UtilityFunctions.expQueueLength);
+% generate cluster
+% NOTE: we can set data rate here because they don't change
+% however, demand is set in the for loop below
+clusterSet = Cells.empty(num_Alg,0);
+for i=1:num_Alg
+    clusterSet(i) = Cells(N,M);
+    clusterSet(i).setDataRate(repmat([5 20],N, 1));
+end
 
-s5 = SingleFrameScheduler(M);
-s5.setSchedulingAlg(alg5);
-s5.setUtilityFunction(@UtilityFunctions.expQueueLength);
+% setup schedulers
+alg1 = GreedyAlg;       
+alg2 = PFAlg;
+alg3 = SimplePFAlg;
 
-s6 = SingleFrameScheduler(M);
-s6.setSchedulingAlg(alg2);
-s6.setUtilityFunction(@UtilityFunctions.expQueueLength);
-
+schedulers = SingleFrameScheduler.empty(num_Alg,0);
+for i=1:num_Alg
+    schedulers(i) = SingleFrameScheduler(M);
+    schedulers(i).setUtilityFunction(@UtilityFunctions.dataRateBase);
+end
+schedulers(1).setSchedulingAlg(alg1);
+schedulers(2).setSchedulingAlg(alg2);
+schedulers(3).setSchedulingAlg(alg3);
 
 % stat
-stat = Statistic(nsims, sim_time/tau);
-stat2 = Statistic(nsims, sim_time/tau);
-stat3 = Statistic(nsims, sim_time/tau);
-stat4 = Statistic(nsims, sim_time/tau);
-stat5 = Statistic(nsims, sim_time/tau);
-stat6 = Statistic(nsims, sim_time/tau);
-
-
-for s=1:nsims
-    fprintf('\n Simulation round %d\n',s);
-    timer = 0;
-    
-    % create a cluster of N cells, and number of subframes M
-    cells = Cells(N,M);
-    
-    % For simplicity, assume data rate does not change
-    % FIXME: what distribution here????
-    dataRate = DataGenerator.generateDataRate(N);
-    cells.setDataRate(dataRate);
-    
-    cells2 = copy(cells);
-    cells3 = copy(cells);
-    cells4 = copy(cells);
-    cells5 = copy(cells);
-    cells6 = copy(cells);
-
-    
-    idx = 1;
-    while (timer < sim_time)
-        fprintf('.');
-        % 1. Generate cells' demands, including rate and ratio
-        % FIXME: what distribution here????
-        link_demand = DataGenerator.generateLTEStandardDemand(N,M);
-        cells.setDemand(link_demand);
-        cells2.setDemand(link_demand);
-        cells3.setDemand(link_demand);
-        cells4.setDemand(link_demand);
-        cells5.setDemand(link_demand);
-        cells6.setDemand(link_demand);
-        
-        % 2. If not yet configured, configure the cluster 
-        if s1.needReconfiguration() 
-            [mu, md] = s1.configure(cells);
-%            fprintf('mu=%d, md=%d\n',mu,md);
-        end
-        
-        [mu2, md2] = s2.configure(cells2);
-        [mu3, md3] = s3.configure(cells3);
-        [mu4, md4] = s4.configure(cells4);
-        [mu5, md5] = s5.configure(cells5);
-        [mu6, md6] = s6.configure(cells6);
-
-        % 3. All cells transmit and receive as configured
-        cells.transmit(mu, md);
-        cells2.transmit(mu2, md2);
-        cells3.transmit(mu3, md3);
-        cells4.transmit(mu4, md4);
-        cells5.transmit(mu5, md5);
-        cells6.transmit(mu6, md6);
-        
-        % 4. Update statistics
-        stat.update(s, idx, cells);
-        stat2.update(s, idx, cells2);
-        stat3.update(s, idx, cells3);
-        stat4.update(s, idx, cells4);
-        stat5.update(s, idx, cells5);
-        stat6.update(s, idx, cells6);
-
-        idx = idx + 1;
-        
-        % 5. Increase timer
-        timer = timer + tau;
-    end
+stats = Statistic.empty(num_Alg,0);
+for i=1:num_Alg
+    stats(i) = Statistic(nsims, sim_time/tau);
 end
-fprintf('\n');
+
+t = 1;
+idx = 1;
+while t < sim_time
+    fprintf('.', idx);
+    % check if any cell has new user?
+    for cell = cells
+        cell.updateUser(t);     % need to generate random user if needed
+    end
+
+    % collect data demand 
+    for cell = cells
+        [ul, dl] = cell.getDemandBySubframe();
+        numDemandUL = numDemandUL + ul;
+        numDemandDL = numDemandDL + dl;
+        for cluster = clusterSet
+            cluster.setDemandByCell(cell.getId(), ul, dl);    % update the CellMatrix in Cells
+        end
+    end
+
+    % schedule
+    for i = 1:num_Alg
+        [mu, md] = schedulers(i).configure(clusterSet(i));
+        clusterSet(i).transmit(mu, md);
+        
+        stats(i).update(1, idx, clusterSet(i));
+        numScheduledUL(i) = numScheduledUL(i) + mu;
+        numScheduledDL(i) = numScheduledDL(i) + md;
+    end
+
+    % store data for statistic
+    t = t + tau;
+    idx = idx + 1;
+end 
+    
+for i=1:num_Alg
+    FinalResultThroughput(:, i) = stats(i).getAvgTotalThroughput();
+end
+fprintf('\n'); 
