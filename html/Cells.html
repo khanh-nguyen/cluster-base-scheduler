@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Cells</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-09-29"><meta name="DC.source" content="Cells.m"><style type="text/css">
+      --><title>Cells</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-11-12"><meta name="DC.source" content="Cells.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,45 +66,42 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">classdef</span> Cells &lt; handle
-    <span class="comment">%Cells represents the set of cells in one cluster</span>
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Setters</a></li><li><a href="#4">Getters</a></li><li><a href="#5">Utility functions</a></li></ul></div><pre class="codeinput"><span class="keyword">classdef</span> Cells &lt; matlab.mixin.Copyable
+    <span class="comment">% Cells represents a cluster, i.e. set of cells</span>
+    <span class="comment">%   information about all the cells in the cluster is stored in an</span>
+    <span class="comment">%   internal matrix for convenience in computation.</span>
 
     <span class="keyword">properties</span>
-        CellMatrix; <span class="comment">%  ---------------------------------------------</span>
-                    <span class="comment">% | ULDR | DLDR | UL | DL | UL queue | DL queue |</span>
-
+        CellMatrix; <span class="comment">% | ULDR | DLDR | UL | DL | ULQL | DLQL | UR | DR |</span>
         M;          <span class="comment">% number of subframes in a frame</span>
         N;          <span class="comment">% number of cells</span>
-        Throughput; <span class="comment">% Nx2 matrix - cummulative throughput</span>
-        counter = 0; <span class="comment">% number of time frames since existence</span>
+        cellThroughput; <span class="comment">% Nx2 matrix - cell throughput at each frame</span>
     <span class="keyword">end</span>
 
     <span class="keyword">properties</span> (Constant)
-        NC = 6;     <span class="comment">% number of columns in CellMatrix, i.e. number of attributes</span>
+        NC = 8;     <span class="comment">% number of columns in CellMatrix</span>
         ULDR = 1;   <span class="comment">% column index of Uplink Datarate</span>
         DLDR = 2;   <span class="comment">% column index of Downlink Datarate</span>
         UL = 3;     <span class="comment">% column index of demand UL subframes</span>
         DL = 4;     <span class="comment">% column index of demand DL subframes</span>
         ULQL = 5;   <span class="comment">% column index of UL queue length</span>
         DLQL = 6;   <span class="comment">% column index of DL queue length</span>
+        UR = 7;     <span class="comment">% number of remaining UL subframes</span>
+        DR = 8;     <span class="comment">% number of remaining DL subframes</span>
     <span class="keyword">end</span>
 
     <span class="keyword">methods</span>
-        <span class="comment">%%Constructor</span>
-        <span class="keyword">function</span> obj = Cells(N, M)
-            <span class="comment">%constructor creates a set of N cells</span>
-
+</pre><pre class="codeinput">        <span class="keyword">function</span> obj = Cells(N, M)
+            <span class="comment">% creates a set of N cells</span>
             obj.CellMatrix = zeros(N,obj.NC);
             obj.M = M;
-            obj.Throughput = zeros(N,2);
             obj.N = N;
         <span class="keyword">end</span>
-
-        <span class="comment">%%Setters</span>
-        <span class="keyword">function</span> setDataRate(obj, rates)
-            <span class="comment">%setDataRate sets the data rate for all cells</span>
+</pre><pre class="codeoutput error">Error using Cells (line 28)
+Not enough input arguments.
+</pre><h2>Setters<a name="3"></a></h2><pre class="codeinput">        <span class="keyword">function</span> setDataRate(obj, rates)
+            <span class="comment">% setDataRate sets the data rate for all cells</span>
             <span class="comment">%  rates - a Nx2 matrix, representing the UL/DL rates of cells</span>
-
             classes = {<span class="string">'numeric'</span>};
             attributes = {<span class="string">'size'</span>,[obj.N,2]};
             validateattributes(rates,classes,attributes);
@@ -112,96 +109,100 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
             obj.CellMatrix(:,obj.ULDR:obj.DLDR) = rates;
         <span class="keyword">end</span>
 
-        <span class="keyword">function</span> setDemand(obj, uplinks, downlinks)
-            <span class="comment">%setUplinkDemand sets the number of uplinks and downlinks</span>
-            <span class="comment">%  demanded for each cell</span>
-            <span class="comment">%  uplinks - column vector represents number of uplink demanded</span>
-            <span class="comment">%  downlinks - column vector rep. number of downlink demanded</span>
-
+        <span class="keyword">function</span> setDemand(obj, demands)
+            <span class="comment">% setDemand sets the number of UL/DL demanded (demans + remain)</span>
+            <span class="comment">%   demands are measured in #subframes</span>
             classes = {<span class="string">'numeric'</span>};
-            attributes = {<span class="string">'size'</span>,[obj.N,1]};
-            validateattributes(uplinks,classes,attributes);
-            validateattributes(downlinks,classes,attributes);
+            attributes = {<span class="string">'size'</span>,[obj.N,2]};
+            validateattributes(demands,classes,attributes);
 
-            <span class="comment">% number of demanded UL/DL</span>
-            obj.CellMatrix(:,obj.UL) = uplinks;
-            obj.CellMatrix(:,obj.DL) = downlinks;
-
-            <span class="comment">% calculate queue length</span>
-            obj.updateQueueLength();
+            <span class="comment">% number of demanded UL/DL: demand + remain</span>
+            obj.CellMatrix(:,obj.UL:obj.DL) = demands <span class="keyword">...</span>
+                                         + obj.CellMatrix(:,obj.UR:obj.DR);
         <span class="keyword">end</span>
 
-        <span class="comment">%%Getters</span>
-        <span class="keyword">function</span> dataRates = getDataRate(obj)
-            <span class="comment">%dataRates returns the UL/DL data rates of cells</span>
+        <span class="keyword">function</span> setDemandByCell(obj, id, ul, dl)
+            <span class="comment">% setDemandByCell similar to setDemand but done per cell</span>
+            obj.CellMatrix(id, obj.UL:obj.DL) = [ul, dl] + obj.CellMatrix(id,obj.UR:obj.DR);
+        <span class="keyword">end</span>
+</pre><h2>Getters<a name="4"></a></h2><pre class="codeinput">        <span class="keyword">function</span> dataRates = getDataRate(obj)
+            <span class="comment">% getDataRate gets the cells' data rates</span>
             dataRates = obj.CellMatrix(:,obj.ULDR:obj.DLDR);
-        <span class="keyword">end</span>
-
-        <span class="keyword">function</span> avgThroughput = getAvgThrouhgput(obj)
-            <span class="comment">%getAvgThrouhgput returns average [uT,dT] until this moment</span>
-            <span class="comment">%  FIXME: as we don't need avgThrouhgput for utility funciton,</span>
-            <span class="comment">%  this function can be rewriten in more efficient way,</span>
-            <span class="comment">%  the case when counter == 0 is not needed</span>
-
-            <span class="keyword">if</span> (obj.counter == 0)
-               <span class="comment">% first time, no throughput yet</span>
-               avgThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) <span class="keyword">...</span>
-                            .* ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M );
-            <span class="keyword">else</span>
-                avgThroughput = obj.Throughput / obj.counter;
-            <span class="keyword">end</span>
+            validateattributes(dataRates,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[obj.N,2]});
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> totalThrouhghput = getTotalThroughput(obj)
-            <span class="comment">%getTotalThroughput returns Nx2 matrix of total throughput</span>
-
-            totalThrouhghput = sum(obj.Throughput,1);
+            <span class="comment">% getTotalThroughput sums up UL/DL throughputs over all the cells</span>
+            <span class="comment">%   returns a 1x2 matrix</span>
+            totalThrouhghput = sum(obj.cellThroughput,1);
+            validateattributes(totalThrouhghput,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[1,2]});
         <span class="keyword">end</span>
 
-        <span class="comment">%%Utility functions</span>
-        <span class="keyword">function</span> [uT, dT] = transmit(obj, uplink, downlink)
-            <span class="comment">%transmit sends data upward and downward</span>
+        <span class="keyword">function</span> queueLength = getQueueLength(obj)
+            <span class="comment">% getQueueLength gets queue length measured in #subframes</span>
+            <span class="comment">%   returns a Nx2 matrix</span>
+            queueLength = obj.CellMatrix(:,obj.UR:obj.DR);
+            validateattributes(queueLength,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[obj.N,2]});
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> realQL = getRealQueueLength(obj)
+            <span class="comment">% getRealQueueLength get queue length measured in Mb</span>
+            <span class="comment">%   returns a Nx2 matrix</span>
+            realQL = (obj.CellMatrix(:,obj.UR:obj.DR) .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;
+            validateattributes(realQL,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[obj.N,2]});
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> queueLength = getTotalQueueLength(obj)
+            <span class="comment">% getTotalQueueLength sums UL &amp; DL queue lengths per cell</span>
+            <span class="comment">%   returns Nx1 vector of total queue length</span>
+            tmp = obj.CellMatrix(:,obj.UR:obj.DR);
+            queueLength = sum(tmp, 2);
+            validateattributes(queueLength,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[obj.N,1]});
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> demand = getDemand(obj)
+            <span class="comment">% getDemand gets the # UL/DL demanded subframes</span>
+            demand = obj.CellMatrix(:,obj.UL:obj.DL);
+            validateattributes(demand,{<span class="string">'numeric'</span>},{<span class="string">'size'</span>,[obj.N,2]});
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> cellRates = getCellRate(obj, id)
+            <span class="comment">% getCellRate gets the UL/DL rate of a given cell (Mbps)</span>
+            cellRates = obj.CellMatrix(id, obj.ULDR:obj.DLDR);
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> throughput = getCurrentThroughput(obj)
+            throughput = sum(obj.cellThroughput(:));
+        <span class="keyword">end</span>
+</pre><h2>Utility functions<a name="5"></a></h2><pre class="codeinput">        <span class="keyword">function</span> transmitted = transmit(obj, uplink, downlink)
+            <span class="comment">% transmit #uplink subframes, #downlink subframes</span>
             <span class="comment">%  uplink and downlink are calculated by scheduling algorithm</span>
             <span class="comment">%  all cells are configured with the same number of UL and DL</span>
+            <span class="comment">%  returns the amount of data being transmitted (Mb)</span>
+            actual_sf = min(repmat([uplink downlink],obj.N,1), <span class="keyword">...</span>
+                             obj.CellMatrix(:,obj.UL:obj.DL));
 
-            uT = (uplink/obj.M) * obj.CellMatrix(:,obj.ULDR);
-            dT = (downlink/obj.M) * obj.CellMatrix(:,obj.DLDR);
+            <span class="comment">% actual data transmitted</span>
+            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;    <span class="comment">%Mb</span>
 
-            <span class="comment">% update queue length</span>
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - [uT,dT];
-            <span class="comment">% replace negative values with 0</span>
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = max(obj.CellMatrix(:,obj.ULQL:obj.DLQL), 0);
+            obj.cellThroughput = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
 
-            <span class="comment">% update throughput</span>
-            obj.Throughput = obj.Throughput + [uT, dT];
-
-            <span class="comment">% update counter</span>
-            obj.counter = obj.counter + 1;
+            <span class="comment">% update remaining subframes</span>
+            obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> [minL, maxL, avgL, stdL] = queueStats(obj, direction)
-            <span class="comment">%queueStats computes statistics for queue lengths</span>
+            <span class="comment">% queueStats computes stats of queue lengths (Mb)</span>
             <span class="keyword">switch</span> direction
                 <span class="keyword">case</span> Direction.Uplink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.ULQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.UR).* obj.CellMatrix(:,obj.ULDR))/1000);
                 <span class="keyword">case</span> Direction.Downlink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DLQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.DR).* obj.CellMatrix(:,obj.DLDR))/1000);
             <span class="keyword">end</span>
         <span class="keyword">end</span>
+</pre><pre class="codeinput">    <span class="keyword">end</span>
 
-        <span class="keyword">function</span> updateQueueLength(obj)
-            <span class="comment">%updateQueueLength updates queue length every time demand</span>
-            <span class="comment">%  changes</span>
-            <span class="comment">%  schedule_rate = data_ratio * data_rate</span>
-            <span class="comment">%  queue_length = queue_length + schedule_rate</span>
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = <span class="keyword">...</span>
-                            obj.CellMatrix(:,obj.ULQL:obj.DLQL) <span class="keyword">...</span>
-                         +  ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M ) <span class="keyword">...</span>
-                         .* obj.CellMatrix(:,obj.ULDR:obj.DLDR);
-        <span class="keyword">end</span>
-    <span class="keyword">end</span>
-
-    <span class="keyword">methods</span> (Static)
+    methods (Static)
         <span class="keyword">function</span> [minL, maxL, avgL, stdL] = queueStatsHelper(col)
                 minL = min(col);
                 maxL = max(col);
@@ -210,49 +211,44 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 <span class="keyword">end</span>
-</pre><pre class="codeoutput error">Error using Cells (line 29)
-Not enough input arguments.
 </pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
-classdef Cells < handle
-    %Cells represents the set of cells in one cluster
+classdef Cells < matlab.mixin.Copyable
+    % Cells represents a cluster, i.e. set of cells
+    %   information about all the cells in the cluster is stored in an 
+    %   internal matrix for convenience in computation.
     
     properties
-        CellMatrix; %  REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
-                    % | ULDR | DLDR | UL | DL | UL queue | DL queue |
-                    
+        CellMatrix; % | ULDR | DLDR | UL | DL | ULQL | DLQL | UR | DR |
         M;          % number of subframes in a frame
         N;          % number of cells
-        Throughput; % Nx2 matrix - cummulative throughput
-        counter = 0; % number of time frames since existence 
+        cellThroughput; % Nx2 matrix - cell throughput at each frame
     end
     
     properties (Constant)
-        NC = 6;     % number of columns in CellMatrix, i.e. number of attributes
+        NC = 8;     % number of columns in CellMatrix
         ULDR = 1;   % column index of Uplink Datarate
         DLDR = 2;   % column index of Downlink Datarate
         UL = 3;     % column index of demand UL subframes
         DL = 4;     % column index of demand DL subframes
-        ULQL = 5;   % column index of UL queue length
+        ULQL = 5;   % column index of UL queue length 
         DLQL = 6;   % column index of DL queue length 
+        UR = 7;     % number of remaining UL subframes
+        DR = 8;     % number of remaining DL subframes
     end
     
     methods
-        %%Constructor
         function obj = Cells(N, M)
-            %constructor creates a set of N cells
-            
+            % creates a set of N cells
             obj.CellMatrix = zeros(N,obj.NC);
             obj.M = M;
-            obj.Throughput = zeros(N,2);
             obj.N = N;
         end
         
-        %%Setters
+        %% Setters
         function setDataRate(obj, rates) 
-            %setDataRate sets the data rate for all cells
+            % setDataRate sets the data rate for all cells
             %  rates - a Nx2 matrix, representing the UL/DL rates of cells
-            
             classes = {'numeric'};
             attributes = {'size',[obj.N,2]};
             validateattributes(rates,classes,attributes);
@@ -260,93 +256,102 @@ classdef Cells < handle
             obj.CellMatrix(:,obj.ULDR:obj.DLDR) = rates;
         end
         
-        function setDemand(obj, uplinks, downlinks)
-            %setUplinkDemand sets the number of uplinks and downlinks 
-            %  demanded for each cell
-            %  uplinks - column vector represents number of uplink demanded
-            %  downlinks - column vector rep. number of downlink demanded
-            
+        function setDemand(obj, demands)
+            % setDemand sets the number of UL/DL demanded (demans + remain)
+            %   demands are measured in #subframes
             classes = {'numeric'};
-            attributes = {'size',[obj.N,1]};
-            validateattributes(uplinks,classes,attributes);
-            validateattributes(downlinks,classes,attributes);
+            attributes = {'size',[obj.N,2]};
+            validateattributes(demands,classes,attributes);
             
-            % number of demanded UL/DL
-            obj.CellMatrix(:,obj.UL) = uplinks;
-            obj.CellMatrix(:,obj.DL) = downlinks;
-            
-            % calculate queue length
-            obj.updateQueueLength();
+            % number of demanded UL/DL: demand + remain
+            obj.CellMatrix(:,obj.UL:obj.DL) = demands ...
+                                         + obj.CellMatrix(:,obj.UR:obj.DR);
         end
         
-        %%Getters
+        function setDemandByCell(obj, id, ul, dl)
+            % setDemandByCell similar to setDemand but done per cell
+            obj.CellMatrix(id, obj.UL:obj.DL) = [ul, dl] + obj.CellMatrix(id,obj.UR:obj.DR);
+        end
+        
+        %% Getters
         function dataRates = getDataRate(obj)
-            %dataRates returns the UL/DL data rates of cells
+            % getDataRate gets the cells' data rates
             dataRates = obj.CellMatrix(:,obj.ULDR:obj.DLDR);
-        end
-        
-        function avgThroughput = getAvgThrouhgput(obj)
-            %getAvgThrouhgput returns average [uT,dT] until this moment
-            %  FIXME: as we don't need avgThrouhgput for utility funciton,
-            %  this function can be rewriten in more efficient way, 
-            %  the case when counter == 0 is not needed
-            
-            if (obj.counter == 0) 
-               % first time, no throughput yet
-               avgThroughput = obj.CellMatrix(:,obj.ULDR:obj.DLDR) ...
-                            .* ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M );
-            else     
-                avgThroughput = obj.Throughput / obj.counter;
-            end
+            validateattributes(dataRates,{'numeric'},{'size',[obj.N,2]});
         end
         
         function totalThrouhghput = getTotalThroughput(obj)
-            %getTotalThroughput returns Nx2 matrix of total throughput
-            
-            totalThrouhghput = sum(obj.Throughput,1);
+            % getTotalThroughput sums up UL/DL throughputs over all the cells
+            %   returns a 1x2 matrix
+            totalThrouhghput = sum(obj.cellThroughput,1);
+            validateattributes(totalThrouhghput,{'numeric'},{'size',[1,2]});
         end
         
-        %%Utility functions
-        function [uT, dT] = transmit(obj, uplink, downlink)
-            %transmit sends data upward and downward
+        function queueLength = getQueueLength(obj)
+            % getQueueLength gets queue length measured in #subframes
+            %   returns a Nx2 matrix 
+            queueLength = obj.CellMatrix(:,obj.UR:obj.DR);
+            validateattributes(queueLength,{'numeric'},{'size',[obj.N,2]});
+        end
+        
+        function realQL = getRealQueueLength(obj) 
+            % getRealQueueLength get queue length measured in Mb
+            %   returns a Nx2 matrix
+            realQL = (obj.CellMatrix(:,obj.UR:obj.DR) .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;
+            validateattributes(realQL,{'numeric'},{'size',[obj.N,2]});
+        end
+        
+        function queueLength = getTotalQueueLength(obj)
+            % getTotalQueueLength sums UL & DL queue lengths per cell
+            %   returns Nx1 vector of total queue length
+            tmp = obj.CellMatrix(:,obj.UR:obj.DR);
+            queueLength = sum(tmp, 2);
+            validateattributes(queueLength,{'numeric'},{'size',[obj.N,1]});
+        end
+        
+        function demand = getDemand(obj)
+            % getDemand gets the # UL/DL demanded subframes
+            demand = obj.CellMatrix(:,obj.UL:obj.DL);
+            validateattributes(demand,{'numeric'},{'size',[obj.N,2]});
+        end
+
+        function cellRates = getCellRate(obj, id) 
+            % getCellRate gets the UL/DL rate of a given cell (Mbps)
+            cellRates = obj.CellMatrix(id, obj.ULDR:obj.DLDR);
+        end
+       
+        function throughput = getCurrentThroughput(obj)
+            throughput = sum(obj.cellThroughput(:));
+        end
+        
+        %% Utility functions
+        function transmitted = transmit(obj, uplink, downlink)
+            % transmit #uplink subframes, #downlink subframes
             %  uplink and downlink are calculated by scheduling algorithm
             %  all cells are configured with the same number of UL and DL
+            %  returns the amount of data being transmitted (Mb)
+            actual_sf = min(repmat([uplink downlink],obj.N,1), ...
+                             obj.CellMatrix(:,obj.UL:obj.DL));
             
-            uT = (uplink/obj.M) * obj.CellMatrix(:,obj.ULDR);
-            dT = (downlink/obj.M) * obj.CellMatrix(:,obj.DLDR);
+            % actual data transmitted
+            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;    %Mb
             
-            % update queue length
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = obj.CellMatrix(:,obj.ULQL:obj.DLQL) - [uT,dT];
-            % replace negative values with 0
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = max(obj.CellMatrix(:,obj.ULQL:obj.DLQL), 0); 
+            obj.cellThroughput = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             
-            % update throughput
-            obj.Throughput = obj.Throughput + [uT, dT];
-            
-            % update counter
-            obj.counter = obj.counter + 1;
+            % update remaining subframes
+            obj.CellMatrix(:,obj.UR:obj.DR) = obj.CellMatrix(:,obj.UL:obj.DL) - actual_sf;
         end
                 
         function [minL, maxL, avgL, stdL] = queueStats(obj, direction) 
-            %queueStats computes statistics for queue lengths
+            % queueStats computes stats of queue lengths (Mb)
             switch direction
                 case Direction.Uplink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.ULQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.UR).* obj.CellMatrix(:,obj.ULDR))/1000);
                 case Direction.Downlink
-                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper(obj.CellMatrix(:,obj.DLQL));
+                    [minL, maxL, avgL, stdL] = Cells.queueStatsHelper((obj.CellMatrix(:,obj.DR).* obj.CellMatrix(:,obj.DLDR))/1000);
             end
         end
-        
-        function updateQueueLength(obj) 
-            %updateQueueLength updates queue length every time demand
-            %  changes
-            %  schedule_rate = data_ratio * data_rate
-            %  queue_length = queue_length + schedule_rate
-            obj.CellMatrix(:,obj.ULQL:obj.DLQL) = ...
-                            obj.CellMatrix(:,obj.ULQL:obj.DLQL) ... 
-                         +  ( obj.CellMatrix(:,obj.UL:obj.DL) / obj.M ) ...
-                         .* obj.CellMatrix(:,obj.ULDR:obj.DLDR);
-        end
+
     end
     
     methods (Static)
