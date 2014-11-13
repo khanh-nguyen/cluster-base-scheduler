@@ -31,7 +31,8 @@ classdef CellPoisson < handle
             % setup initial users
             obj.userList = User.empty(init_user, 0);
             for i = 1:init_user
-                obj.userList(i) = DataGenerator.generateUser();
+                % obj.userList(i) = DataGenerator.generateUser();
+                obj.addUser();
             end
         end
         
@@ -49,7 +50,8 @@ classdef CellPoisson < handle
         function addUser(obj)
             % add a new user to the cell
             %   private function (to be used by updateUser())
-            obj.userList(end+1) = DataGenerator.generateUser();
+            x = CellPoisson.chooseAppType();
+            obj.userList(end+1) = DataGenerator.generateUserWithApp(x);
         end
         
         function updateUser(obj,t)
@@ -107,6 +109,22 @@ classdef CellPoisson < handle
             % getNumberUser gets number of users in cell
             %   used for testing purpose only
             x = length(obj.userList);
+        end
+    end
+    
+    methods (Static)
+        function appType = chooseAppType()
+            % chooseAppType chooses apps based on their popularity
+            x = rand();
+            if x < 0.1
+                appType = 3;    % youtube UL
+            elseif x >= 0.1 && x < 0.3
+                appType = 4;    % web surfing
+            elseif x >= 0.5 && x < 0.5
+                appType = 1;    % spotify
+            else
+                appType = 2;    % youtube DL
+            end
         end
     end
 end

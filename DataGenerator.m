@@ -5,10 +5,10 @@ classdef DataGenerator
         % array of app categories
         %   data size is number_of_Kb / 1000
         %   row_format: ULRate, DLRate, minULSize, maxULSize, minDLSize, maxDLSize
-        appCategory = [ 0.3, 0.3, 36,  90, 36, 90;
-                          0, 1.0,  0,   0, 60,300;
-                        1.0,   0, 60, 300,  0,  0; % Youtube up: 1-5 min
-                        0.5,   0, 15,  90,  0,  0; % Upload file: 0.5-3 min
+        appCategory = [ 0.3, 0.3, 36,  90, 36, 90;  % Type 1: balance game
+                          0, 1.0,  0,   0, 60,300;  % Type 2: heavy DL
+                        1.0,   0, 60, 300,  0,  0;  % Type 3: heavy UL
+                          0, 0.5,  0,   0, 15, 90;  % Type 4: normal DL
                       ];
         appType = 4;    % number of applican types
     end
@@ -30,6 +30,17 @@ classdef DataGenerator
             % generateUser generates an User, 
             %   User randomly choses an app from a list of apps
             [ulRate, dlRate, ulSize, dlSize] = DataGenerator.randomApp();
+            user = User(ulRate, dlRate, ulSize, dlSize);
+        end
+        
+        function user = generateUserWithApp(appId)
+            % generateUser generates an User, 
+            %   User randomly choses an app from a list of apps
+            app = DataGenerator.appCategory(appId, :);
+            ulRate = app(1);
+            dlRate = app(2);
+            ulSize = randi([app(3), app(4)]);
+            dlSize = randi([app(5), app(6)]);
             user = User(ulRate, dlRate, ulSize, dlSize);
         end
         
