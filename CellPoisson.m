@@ -120,12 +120,12 @@ classdef CellPoisson < handle
                 appType = 3;    % youtube UL
             elseif x >= 0.1 && x < 0.3
                 appType = 4;    % web surfing
-            elseif x >= 0.5 && x < 0.5
+            elseif x >= 0.3 && x < 0.5
                 appType = 1;    % spotify
             else
                 appType = 2;    % youtube DL
             end
-        end
+        end  
     end
 end
 

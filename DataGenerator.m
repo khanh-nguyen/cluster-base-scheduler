@@ -53,7 +53,8 @@ classdef DataGenerator
             cluster = CellPoisson.empty(N, 0);
             for i = 1:N
                 lambda = (max_lambda - min_lambda)*rand() + min_lambda;
-                cluster(i) = CellPoisson(i, randi([10 20]), lambda, sim_time, M);
+                %cluster(i) = CellPoisson(i, randi([10 20]), lambda, sim_time, M);
+                cluster(i) = CellPoisson(i, 20, lambda, sim_time, M);
             end
         end
         

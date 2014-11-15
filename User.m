@@ -38,7 +38,7 @@ classdef User < handle
             
             if obj.DLDemand > 0
                 frame_limit = obj.DLRate / 100; % rate measured in Mbps,
-                                                % rate / 100 = Kb/frame
+                                                % rate / 100 = Mb/frame
                 dl = min(obj.DLDemand, frame_limit);
                 obj.DLDemand = obj.DLDemand - dl;
             end
