@@ -1,4 +1,4 @@
-classdef CellPoisson < handle
+classdef CellPoisson < matlab.mixin.Heterogeneous & handle
     % CellPoisson represents a cellular cell
     %   consists of a BS and multiple UEs 
     %   users' arrival to cell is Poisson event
@@ -31,8 +31,8 @@ classdef CellPoisson < handle
             % setup initial users
             obj.userList = User.empty(init_user, 0);
             for i = 1:init_user
-                % obj.userList(i) = DataGenerator.generateUser();
-                obj.addUser();
+                x = obj.chooseAppType();
+                obj.userList(i) = DataGenerator.generateUserWithApp(x);
             end
         end
         
@@ -50,7 +50,7 @@ classdef CellPoisson < handle
         function addUser(obj)
             % add a new user to the cell
             %   private function (to be used by updateUser())
-            x = CellPoisson.chooseAppType();
+            x = obj.chooseAppType();
             obj.userList(end+1) = DataGenerator.generateUserWithApp(x);
         end
         
@@ -110,22 +110,10 @@ classdef CellPoisson < handle
             %   used for testing purpose only
             x = length(obj.userList);
         end
-    end
-    
-    methods (Static)
-        function appType = chooseAppType()
-            % chooseAppType chooses apps based on their popularity
-            x = rand();
-            if x < 0.1
-                appType = 3;    % youtube UL
-            elseif x >= 0.1 && x < 0.3
-                appType = 4;    % web surfing
-            elseif x >= 0.3 && x < 0.5
-                appType = 1;    % spotify
-            else
-                appType = 2;    % youtube DL
-            end
-        end  
+        
+        function chooseAppType(obj)
+            fprintf('WTF. Dont call me!!!\n');
+        end
     end
 end
 

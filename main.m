@@ -4,14 +4,14 @@ clear; clc;
 
 % simulation parameters
 nsims = 1;
-time_in_minute = 1;
+time_in_minute = 20;
 sim_time = time_in_minute * 60 * 1000;    % time in ms
 M = 10;             % number of subframes in each frame
 N = 20;             % number of cells per cluster
 tau = 10;           % length of one time frame (10ms)
 max_lambda = 1/(0.5*60*1000) ;   % 1 person every every half minute user enter cell      
 min_lambda = 1/(1*60*1000);     % every 1 minutes user enter cell
-cellULRate = 5;     % Mbps
+cellULRate = 10;     % Mbps
 cellDLRate = 20;    % Mbps
 
 num_Alg = 3;
@@ -23,9 +23,17 @@ numScheduledDL = zeros(num_Alg, 1);
 FinalResultThroughput = zeros(sim_time / tau, num_Alg);
 
 % generate cells 
-cells = DataGenerator.generatePoissonCells(N, sim_time, min_lambda, max_lambda, M);
-for cell = cells
-    cell.setDataRate(cellULRate, cellDLRate);   % FIXME: should make it more random here ?!
+cells = CellPoisson.empty(N, 0);
+for i=1:N/2
+    lambda = (max_lambda - min_lambda)*rand() + min_lambda;
+    cells(i) = PoissonCellHeavyDL(i, 20, lambda, sim_time, M);
+    cells(i).setDataRate(cellULRate, cellDLRate);
+end
+
+for i=(N/2+1):N
+    lambda = (max_lambda - min_lambda)*rand() + min_lambda;
+    cells(i) = PoissonCellHeavyUL(i, 20, lambda, sim_time, M);
+    cells(i).setDataRate(cellULRate, cellDLRate);
 end
 
 % generate cluster
@@ -62,8 +70,8 @@ end
 % actual simulation starts from here
 t = 1;
 idx = 1;
+disp('Start simulation');
 while t < sim_time
-    fprintf('.', idx);
     % update cells' users
     for cell = cells
         cell.updateUser(t);     

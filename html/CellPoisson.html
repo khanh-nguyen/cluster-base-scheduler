@@ -1,0 +1,302 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>CellPoisson</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-11-12"><meta name="DC.source" content="CellPoisson.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">classdef</span> CellPoisson &lt; handle
+    <span class="comment">% CellPoisson represents a cellular cell</span>
+    <span class="comment">%   consists of a BS and multiple UEs</span>
+    <span class="comment">%   users' arrival to cell is Poisson event</span>
+    <span class="keyword">properties</span>
+        id;                 <span class="comment">% cell's id</span>
+        lambda;             <span class="comment">% average period of time for which users enter cell</span>
+        arrival_time;       <span class="comment">% the moment when users arrive</span>
+        next_arrival;       <span class="comment">% time of next arrival</span>
+        next_arrival_idx = 1;   <span class="comment">% index for lookup in arrival_period[]</span>
+        userList;           <span class="comment">% array of users</span>
+        numArrival;         <span class="comment">% number of user going to arrive</span>
+        M;                  <span class="comment">% number of subframes in each frame</span>
+        frame_length = 10;  <span class="comment">% length of a frame in ms; standard is 10ms</span>
+        ulRate = 5;         <span class="comment">% Mbps</span>
+        dlRate = 20;        <span class="comment">% Mbps</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">methods</span>
+        <span class="keyword">function</span> obj = CellPoisson(id, init_user, lambda, sim_time, M)
+            <span class="comment">% constructor, used to create cell</span>
+            obj.id = id;
+            obj.M = M;      <span class="comment">% number of subframes per frame</span>
+            obj.lambda = lambda;
+            [obj.numArrival, obj.arrival_time] = generateArrivalTime(lambda, sim_time);
+            <span class="keyword">if</span> obj.numArrival &gt; 0
+                obj.next_arrival = obj.arrival_time(1);
+            <span class="keyword">else</span>
+                obj.next_arrival = inf;
+            <span class="keyword">end</span>
+
+            <span class="comment">% setup initial users</span>
+            obj.userList = User.empty(init_user, 0);
+            <span class="keyword">for</span> i = 1:init_user
+                obj.userList(i) = DataGenerator.generateUser();
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> bool = hasNewUser(obj,t)
+            <span class="comment">% hasNewUser checks if the cell has new user coming in at time t</span>
+            <span class="comment">%   we check this in every frame, hence, t - next_arrival &lt; 10</span>
+            <span class="comment">%   private function (to be used by updateUser())</span>
+            <span class="keyword">if</span> 0 &lt;= t - obj.next_arrival &amp;&amp; t - obj.next_arrival &lt; frame_length
+                bool = true;
+            <span class="keyword">else</span>
+                bool = false;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> addUser(obj)
+            <span class="comment">% add a new user to the cell</span>
+            <span class="comment">%   private function (to be used by updateUser())</span>
+            obj.userList(end+1) = DataGenerator.generateUser();
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> updateUser(obj,t)
+            <span class="comment">% add user to the cell is there's a new user coming</span>
+            <span class="keyword">if</span> obj.hasNewUser(t)
+                obj.addUser()
+
+                <span class="comment">% update arrival time</span>
+                <span class="keyword">if</span> obj.next_arrival_idx &lt; obj.numArrival
+                    obj.next_arrival_idx = obj.next_arrival_idx + 1;
+                    obj.next_arrival = obj.arrival_time(obj.next_arrival_idx);
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> setDataRate(obj, ulRate, dlRate)
+            <span class="comment">% setDataRate sets UL and DL data rate for cell</span>
+            obj.ulRate = ulRate;
+            obj.dlRate = dlRate;
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> id = getId(obj)
+            <span class="comment">% getId gets cell's ID</span>
+            id = obj.id;
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> [ul, dl] = getDemand(obj)
+            <span class="comment">% getDemand gets the demand traffic by summing up users'</span>
+            <span class="comment">% demands (Mb)</span>
+            <span class="comment">%   NOTE that demands is the amount of traffic (Mb) needs to be</span>
+            <span class="comment">%   transmitted</span>
+            ul = 0; dl = 0;
+            <span class="keyword">for</span> user = obj.userList
+                [u,d] = user.demand();
+                ul = ul + u;
+                dl = dl + d;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> [ulsf, dlsf] = getDemandBySubframe(obj)
+            <span class="comment">% getDemandBySubframe converts the amount of traffic to number</span>
+            <span class="comment">% of subframes</span>
+            [ul, dl] = obj.getDemand();
+            <span class="keyword">if</span> ul == 0 &amp;&amp; dl == 0
+                ulsf = 0;
+                dlsf = 0;
+            <span class="keyword">else</span>
+                subframe_count = [ul, dl] ./ ([obj.ulRate, obj.dlRate] / 1000); <span class="comment">% how many ms needs to transmit demand</span>
+                ulsf = ceil(subframe_count(1));
+                dlsf = ceil(subframe_count(2));
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> x = getNumberUser(obj)
+            <span class="comment">% getNumberUser gets number of users in cell</span>
+            <span class="comment">%   used for testing purpose only</span>
+            x = length(obj.userList);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Error using CellPoisson (line 22)
+Not enough input arguments.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+classdef CellPoisson < handle
+    % CellPoisson represents a cellular cell
+    %   consists of a BS and multiple UEs 
+    %   users' arrival to cell is Poisson event
+    properties
+        id;                 % cell's id
+        lambda;             % average period of time for which users enter cell
+        arrival_time;       % the moment when users arrive
+        next_arrival;       % time of next arrival 
+        next_arrival_idx = 1;   % index for lookup in arrival_period[]
+        userList;           % array of users
+        numArrival;         % number of user going to arrive
+        M;                  % number of subframes in each frame
+        frame_length = 10;  % length of a frame in ms; standard is 10ms   
+        ulRate = 5;         % Mbps
+        dlRate = 20;        % Mbps
+    end
+    
+    methods
+        function obj = CellPoisson(id, init_user, lambda, sim_time, M)
+            % constructor, used to create cell
+            obj.id = id;
+            obj.M = M;      % number of subframes per frame
+            obj.lambda = lambda;    
+            [obj.numArrival, obj.arrival_time] = generateArrivalTime(lambda, sim_time);
+            if obj.numArrival > 0 
+                obj.next_arrival = obj.arrival_time(1);
+            else
+                obj.next_arrival = inf;
+            end
+            
+            % setup initial users
+            obj.userList = User.empty(init_user, 0);
+            for i = 1:init_user
+                obj.userList(i) = DataGenerator.generateUser();
+            end
+        end
+        
+        function bool = hasNewUser(obj,t)
+            % hasNewUser checks if the cell has new user coming in at time t
+            %   we check this in every frame, hence, t - next_arrival < 10
+            %   private function (to be used by updateUser())
+            if 0 <= t - obj.next_arrival && t - obj.next_arrival < frame_length
+                bool = true;
+            else
+                bool = false;
+            end
+        end
+        
+        function addUser(obj)
+            % add a new user to the cell
+            %   private function (to be used by updateUser())
+            obj.userList(end+1) = DataGenerator.generateUser();
+        end
+        
+        function updateUser(obj,t)
+            % add user to the cell is there's a new user coming
+            if obj.hasNewUser(t)
+                obj.addUser()
+                
+                % update arrival time
+                if obj.next_arrival_idx < obj.numArrival
+                    obj.next_arrival_idx = obj.next_arrival_idx + 1;
+                    obj.next_arrival = obj.arrival_time(obj.next_arrival_idx);
+                end
+            end
+        end
+        
+        function setDataRate(obj, ulRate, dlRate)
+            % setDataRate sets UL and DL data rate for cell
+            obj.ulRate = ulRate;
+            obj.dlRate = dlRate;
+        end
+        
+        function id = getId(obj) 
+            % getId gets cell's ID
+            id = obj.id;
+        end
+        
+        function [ul, dl] = getDemand(obj)
+            % getDemand gets the demand traffic by summing up users'
+            % demands (Mb)
+            %   NOTE that demands is the amount of traffic (Mb) needs to be
+            %   transmitted
+            ul = 0; dl = 0;
+            for user = obj.userList
+                [u,d] = user.demand(); 
+                ul = ul + u;
+                dl = dl + d; 
+            end
+        end
+        
+        function [ulsf, dlsf] = getDemandBySubframe(obj)
+            % getDemandBySubframe converts the amount of traffic to number
+            % of subframes
+            [ul, dl] = obj.getDemand();
+            if ul == 0 && dl == 0
+                ulsf = 0;
+                dlsf = 0;
+            else
+                subframe_count = [ul, dl] ./ ([obj.ulRate, obj.dlRate] / 1000); % how many ms needs to transmit demand
+                ulsf = ceil(subframe_count(1));
+                dlsf = ceil(subframe_count(2));
+            end
+        end
+        
+        function x = getNumberUser(obj)
+            % getNumberUser gets number of users in cell
+            %   used for testing purpose only
+            x = length(obj.userList);
+        end
+    end
+end
+
+
+##### SOURCE END #####
+--></body></html>
