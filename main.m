@@ -48,18 +48,17 @@ for i=1:num_Alg
 end
 
 % setup schedulers
-alg1 = GreedyAlg;       
-alg2 = PFAlg;
-alg3 = SimplePFAlg;
+algs = SchedulingAlgorithm.empty(num_Alg,0);
+algs(1) = GreedyAlg;       
+algs(2) = PFAlg;
+algs(3) = SimplePFAlg;
 
 schedulers = SingleFrameScheduler.empty(num_Alg,0);
 for i=1:num_Alg
     schedulers(i) = SingleFrameScheduler(M);
     schedulers(i).setUtilityFunction(@UtilityFunctions.dataRateBase);
+    schedulers(i).setSchedulingAlg(algs(i));
 end
-schedulers(1).setSchedulingAlg(alg1);
-schedulers(2).setSchedulingAlg(alg2);
-schedulers(3).setSchedulingAlg(alg3);
 
 % stat
 stats = Statistic.empty(num_Alg,0);

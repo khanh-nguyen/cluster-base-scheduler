@@ -3,7 +3,6 @@ classdef UtilityFunctions
     methods (Static)
         function profits = dataRateBase(cells)
             %dataRateBase returns cells' data rates, including UL and DL
-            
             profits = cells.getDataRate();
         end
                 

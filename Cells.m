@@ -1,4 +1,4 @@
-classdef Cells < matlab.mixin.Copyable
+classdef Cells < matlab.mixin.Copyable 
     % Cells represents a cluster, i.e. set of cells
     %   information about all the cells in the cluster is stored in an 
     %   internal matrix for convenience in computation.
@@ -106,6 +106,9 @@ classdef Cells < matlab.mixin.Copyable
         end
        
         function throughput = getCurrentThroughput(obj)
+            % getCurrentThroughput returns the total throughput over all
+            % cells
+            validateattributes(obj.cellThroughput,{'numeric'},{'size',[obj.N,2]});
             throughput = sum(obj.cellThroughput(:));
         end
         
@@ -118,8 +121,8 @@ classdef Cells < matlab.mixin.Copyable
             actual_sf = min(repmat([uplink downlink],obj.N,1), ...
                              obj.CellMatrix(:,obj.UL:obj.DL));
             
-            % actual data transmitted
-            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;    %Mb
+            % actual data transmitted (Mb)
+            transmitted = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / 1000;   
             
             obj.cellThroughput = (actual_sf .* obj.CellMatrix(:,obj.ULDR:obj.DLDR)) / obj.M;
             

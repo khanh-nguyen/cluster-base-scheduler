@@ -1,7 +1,6 @@
 classdef User < handle
     % User represents an UE in the system
     %   each User is assigned a random application
-    
     properties
         ULDemand;           % amount of UL data in Mb
         DLDemand;           % amount of DL data in Mb

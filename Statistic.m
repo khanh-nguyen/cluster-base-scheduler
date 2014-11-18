@@ -7,25 +7,24 @@ classdef Statistic < handle
     %  - max queue length at each iteration time
     %  - average queue length at each iteartion time
     %  - standard deviation of queue length at each iteration time
-    
     properties
         StatsMatrix;    % stores stats info
     end
     
     properties (Constant)
         % Constant properties give names to columns
-        NC = 13;    % number of columns
+        NC = 11;    % number of columns
         TT = 1;     % index of Total Throughput column
-        MinUQ = 4;  % index of Minimum UL Queue length column
-        MaxUQ = 5;  % index of Maximum UL Queue length column
-        AvgUQ = 6;  % index of Average UL Queue length column
-        StdUQ = 7;  % index of Standard deviation of UL Queue length column
-        MinDQ = 8;  % index of Minimum DL Queue length column
-        MaxDQ = 9;  % index of Maximum DL Queue length column
-        AvgDQ = 10; % index of Average DL Queue length column
-        StdDQ = 11; % index of Standard deviation of DL Queue length column
-        SumQL = 12; % sum of the length of UL and DL queues
-        MaxQL = 13; % longest queue length
+        MinUQ = 2;  % index of Minimum UL Queue length column
+        MaxUQ = 3;  % index of Maximum UL Queue length column
+        AvgUQ = 4;  % index of Average UL Queue length column
+        StdUQ = 5;  % index of Standard deviation of UL Queue length column
+        MinDQ = 6;  % index of Minimum DL Queue length column
+        MaxDQ = 7;  % index of Maximum DL Queue length column
+        AvgDQ = 8; % index of Average DL Queue length column
+        StdDQ = 9; % index of Standard deviation of DL Queue length column
+        SumQL = 10; % sum of the length of UL and DL queues
+        MaxQL = 11; % longest queue length
     end
     
     methods
@@ -40,10 +39,10 @@ classdef Statistic < handle
             % update add new statistics to StatsMatrix
             %   idx - time frame number
             %   sim_idx - the iteration number
-            totalThroughput = cells.getCurrentThroughput();  
-            obj.StatsMatrix(idx,obj.TT,sim_idx) = sum(totalThroughput);
+            %totalThroughput = cells.getCurrentThroughput();  
+            obj.StatsMatrix(idx,obj.TT,sim_idx) = cells.getCurrentThroughput();
             
-            realQL = cells.getRealQueueLength();
+            realQL = cells.getRealQueueLength(); % N x 2
             obj.StatsMatrix(idx,obj.SumQL,sim_idx) = sum(realQL(:));
             
             % get the longest queue (ul + dl)
@@ -80,6 +79,7 @@ classdef Statistic < handle
         function totalQL = getTotalQueueLength(obj) 
             % getTotalQueueLengthr returns average queue length 
             totalQL = mean(obj.StatsMatrix(:,obj.SumQL,:),3);
+            validateattributes(totalQL,{'numeric'},{'size',[size(obj.StatsMatrix,1),1]});
         end
         
         function maxQL = getMaxQueueLength(obj)
